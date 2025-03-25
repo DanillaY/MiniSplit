@@ -2,7 +2,7 @@
 import tkinter
 
 from components.line import draw_a_line
-from preferences.prederences import Mini_Split_Preferences
+from preferences.preferences import Mini_Split_Preferences
 from split_manager import Splits_Manager
 
 

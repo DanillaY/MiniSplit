@@ -4,10 +4,9 @@ from components.main_timer import draw_main_timer
 from components.splits import draw_splits
 from components.title import draw_title
 from hotkey_timer import Hotkeys
-from preferences.prederences import Mini_Split_Preferences
+from preferences.preferences import Mini_Split_Preferences
 from timer import Timer
 from tkinter import *
-from tkinter import ttk
 from keyboard_listener import start_keyboard_listener
 
 def tkinter_loop(t : Timer, hotkeys_config: Hotkeys):

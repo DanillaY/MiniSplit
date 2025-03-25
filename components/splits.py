@@ -3,7 +3,7 @@ import tkinter
 from tkinter import ttk
 
 from components.line import draw_a_line
-from preferences.prederences import Mini_Split_Preferences
+from preferences.preferences import Mini_Split_Preferences
 from split_manager import Splits_Manager
 from timer import Timer
 

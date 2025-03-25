@@ -1,6 +1,7 @@
+import json
 import threading
 import time
-from tkinter import Label
+from tkinter import Label, filedialog, messagebox
 
 from split_manager import Splits_Manager
 
@@ -13,6 +14,7 @@ class Timer:
         self.paused_time_total = 0.0
         self.total_time_diff = 0.0
 
+        self.is_pb = False
         self.has_hours = False
         self.running = False
         self.timer_thread = None
@@ -30,10 +32,32 @@ class Timer:
                 prev_time = self.split_manager.loaded_split_values[i]
                 self.split_manager.label_prev_time_list[i].config(text=self.format_time_with_diff(prev_time))
         
+        def save_pb_splits():
+            splits_path = filedialog.asksaveasfilename(defaultextension=".json", filetypes=[("JSON files", "*.json")])
+
+            if splits_path:
+                with open(splits_path, "w") as f:
+
+                    run_info_dict = {'game_name': self.split_manager.run_info_unsaved.game_name,
+                                     'category': self.split_manager.run_info_unsaved.category,
+                                     'attempts': self.split_manager.run_info_unsaved.attempt_count,
+                                     'runner_src_account_url': self.split_manager.run_info_unsaved.runner_src_account,
+                                     'sum_of_best': self.split_manager.sum_of_best,
+                                     'personal_best': self.split_manager.personal_best ,
+                                     'splits': self.split_manager.current_splits}
+                    
+                    json_run_info_and_splits =  run_info_dict
+                    json.dump(json_run_info_and_splits, f, indent=4)
+        
         if self.timer_thread != None:
             self._stop_event.set() 
             self.timer_thread.join()
 
+        if self.is_pb:
+            response = messagebox.askyesno("New personal best!", "You got a new personal best!\nDo you want to save the splits?")
+            if response:
+                save_pb_splits()
+            
         redraw_loaded_values()
 
         self.start = 0.0
@@ -43,6 +67,7 @@ class Timer:
         self.paused_time_total = 0.0
         self.total_time_diff = 0.0
         self.running = False
+        self.is_pb = False
 
         self.split_manager.run_info_unsaved.attempt_count += 1
         self.split_manager.loaded_split_index = 0
@@ -87,42 +112,40 @@ class Timer:
         
         split_i = self.split_manager.loaded_split_index
 
-        def update_split_labels(split_i: int) -> float:
+        def update_split_labels(split_i: int)-> str:
             
             old_time = self.split_manager.loaded_split_values[split_i]
             current_time = ((self.end - self.start) - self.paused_time_total)
-            current_split_diff = 0.0 #TODO wrong diff calc
             sign = ''
 
             if old_time >= current_time:
                 sign = '-'
-                current_split_diff = (old_time - current_time) - self.total_time_diff
                 self.total_time_diff += (old_time - current_time) - self.total_time_diff
             else:
                 sign = '+'
-                current_split_diff = (old_time - current_time) - self.total_time_diff
-                self.total_time_diff -= (current_time - old_time) - self.total_time_diff
+                self.total_time_diff += (current_time - old_time) - self.total_time_diff
 
             self.split_manager.label_prev_time_list[split_i].config(text=self.format_time_without_diff())
             self.split_manager.label_time_diff_list[split_i].config(text=sign+self.format_time_with_diff(self.total_time_diff))
 
-            return current_split_diff
+            return sign
+        
+        def change_curr_splits():
+            for key in self.split_manager.current_splits[split_i]:
+                self.split_manager.current_splits[split_i][key] = (self.end - self.start) - self.paused_time_total
 
         if split_i + 1 < len(self.split_manager.loaded_split_values):
-            current_split_diff = update_split_labels(split_i)
+            update_split_labels(split_i)
+            change_curr_splits()
 
-            for key in self.split_manager.loaded_splits[split_i]:
-                self.split_manager.loaded_splits[split_i][key] = current_split_diff
-                
             self.split_manager.loaded_split_index += 1
         
         if split_i + 1 == len(self.split_manager.loaded_split_values):
             self._stop_event.set()
-            update_split_labels(split_i)
-            self.split_manager.loaded_split_index = 0
+            self.is_pb = update_split_labels(split_i) == '-' #check if the last split was faster then in the loaded file
+            change_curr_splits()
 
-        print(self.split_manager.run_info_unsaved.attempt_count,self.split_manager.loaded_splits,'\n\n\n')
-        
+            self.split_manager.loaded_split_index = 0
 
     def update_main_timer(self, label:Label):
 
