@@ -1,0 +1,65 @@
+{
+	"main_frame_color": "black",
+
+	"title_setting": [
+		{"game_name_foreground" : "white"},
+		{"game_name_background" : "black"},
+		{"category_foreground" : "white"},
+		{"category_background" : "black"},
+
+		{"game_name_font" : "0xProto Nerd Font"},
+		{"category_font" : "0xProto Nerd Font"},
+		
+		{"game_name_font_size" : 9},
+		{"category_font_size" : 8}
+	],
+	"line": [
+		{"min_width": 230},
+		{"height": 1.5},
+		{"color": "white"}
+	],
+	"main_timer": [
+		{"font":  "0xProto Nerd Font Bold"},
+		{"font_size": 15},
+		{"timer_foreground" : "white"},
+		{"timer_background" : "black"}
+	],
+	"splits": [
+		{
+			"description_settings": [
+				{"name_column_foreground" : "white"},
+				{"name_column_background" : "black"},
+				{"name_column_font" : "0xProto Nerd Font"},
+				{"name_column_font_size" : 8},
+				
+				{"diff_column_foreground" : "white"},
+				{"diff_column_background" : "black"},
+				{"diff_column_font" : "0xProto Nerd Font"},
+				{"diff_column_font_size" : 8},
+
+				{"prev_time_column_foreground" : "white"},
+				{"prev_time_column_background" : "black"},
+				{"prev_time_column_font" : "0xProto Nerd Font"},
+				{"prev_time_column_font_size" : 8}
+			]
+		},
+
+		{"split_name_foreground" : "white"},
+		{"split_name_background" : "black"},
+		{"split_name_font" : "0xProto Nerd Font"},
+		{"split_name_font_size" : 8},
+		{"split_name_pady" : 5},
+
+		{"time_diff_foreground" : "white"},
+		{"time_diff_background" : "black"},
+		{"time_diff_font" : "0xProto Nerd Font"},
+		{"time_diff_font_size" : 7},
+		{"time_diff_pady" : 5},
+
+		{"prev_time_foreground" : "white"},
+		{"prev_time_background" : "black"},
+		{"prev_time_font" : "0xProto Nerd Font"},
+		{"prev_time_font_size" : 8},
+		{"prev_time_pady" : 5}
+	]
+}

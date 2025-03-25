@@ -1,0 +1,6 @@
+{
+	"split": "NUMPAD_NUM_0",
+    "start/stop_timer": "NUMPAD_NUM_1",
+    "pause/unpause_timer": "NUMPAD_NUM_2",
+    "reset_timer": "NUMPAD_NUM_3"
+}
