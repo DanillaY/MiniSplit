@@ -2,9 +2,9 @@
 #include <iostream>
 
 int main() {
-	using boost::asio::ip::tcp;
+    using boost::asio::ip::tcp;
 
-	boost::asio::io_service io_service;
+    boost::asio::io_service io_service;
     tcp::resolver resolver(io_service);
     tcp::resolver::query query("127.0.0.1", "8080");
     tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
@@ -14,7 +14,7 @@ int main() {
 
     std::cout << "connected" << std::endl;
 
-	//TODO create a socket for python, read memory, move socket logic from main, send data to split
+    //TODO create a socket for python, read memory, move socket logic from main, send data to split
 
-	return 0;
+    return 0;
 }
