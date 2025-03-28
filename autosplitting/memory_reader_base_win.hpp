@@ -5,7 +5,7 @@
 #include <string>
 
 /*
-	this file contains functions for general purpose use (windows only)
+    this file contains functions for general purpose use (windows only)
 */
 void print_pointer_info(HANDLE handle, void* pointer) {
     MEMORY_BASIC_INFORMATION mbi;
