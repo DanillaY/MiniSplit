@@ -100,6 +100,11 @@
 		"typeindex": "cpp",
 		"typeinfo": "cpp",
 		"valarray": "cpp",
-		"variant": "cpp"
+		"variant": "cpp",
+		"executor": "cpp",
+		"buffer": "cpp",
+		"io_context": "cpp",
+		"netfwd": "cpp",
+		"socket": "cpp"
 	}
 }

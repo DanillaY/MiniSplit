@@ -6,6 +6,8 @@
 #include <cstdint>
 #include "memory_reader_base_win.hpp"
 
+#pragma once
+
 //adds the offset address to the given address and returns new address with the applied offset, use add_offset32 if the process is 32 bit
 uintptr_t add_offset32(HANDLE handle, uintptr_t base, uintptr_t offset) {
     uintptr_t pointer1_address = base + offset;
@@ -42,35 +44,27 @@ uintptr_t add_all_offsets(HANDLE handle, uintptr_t base_module, uintptr_t offset
 }
 
 //use read_proc_memory to read any basic buffer types
-template <typename T>
-T read_proc_memory(int pid, uintptr_t base_module , uintptr_t offsets[], unsigned int offsets_len, T buffer) {
+//template <typename T>
+int read_proc_memory(int pid, uintptr_t base_module , uintptr_t offsets[], unsigned int offsets_len, int buffer) {
 
     HANDLE handle = OpenProcess(PROCESS_VM_READ | PROCESS_VM_OPERATION |PROCESS_QUERY_INFORMATION, FALSE, pid);
-    auto last_pointer = offsets_len > 0 ? add_all_offsets(handle,base_module, offsets, offsets_len) : base_module+offsets[0];
+	auto last_pointer = offsets_len > 1 ? add_all_offsets(handle,base_module, offsets, offsets_len) : base_module+offsets[0];
     
-    if (ReadProcessMemory(handle, LPCVOID(last_pointer), &buffer, sizeof(buffer), nullptr)) {
-        std::cout << "Value from a pointer: " << buffer << std::endl;
-    } else {
-        DWORD error = GetLastError();
-        std::cerr << "read_proc_memory failed. Error code: " << error << std::endl;
-        return T();
-    }
+	ReadProcessMemory(handle, LPCVOID(last_pointer), &buffer, sizeof(buffer), nullptr);
 
     return buffer;
 }
 
 //use read_proc_memory_string to read a char* type
-int read_proc_memory_string(int pid, uintptr_t base_module , uintptr_t offsets[], unsigned int offsets_len, char* buffer) {
+char* read_proc_memory_string(int pid, uintptr_t base_module , uintptr_t offsets[], unsigned int offsets_len, char* buffer, size_t buffer_size) {
 
     HANDLE handle = OpenProcess(PROCESS_VM_READ | PROCESS_VM_OPERATION |PROCESS_QUERY_INFORMATION, FALSE, pid);
-    auto last_pointer = offsets_len > 0 ? add_all_offsets(handle,base_module, offsets, offsets_len) : base_module+offsets[0];
-    
-    if (ReadProcessMemory(handle, LPCVOID(last_pointer), buffer, sizeof(buffer), nullptr)) {
+    auto last_pointer = offsets_len > 1 ? add_all_offsets(handle,base_module, offsets, offsets_len) : base_module+offsets[0];
+
+    if (ReadProcessMemory(handle, LPCVOID(last_pointer), buffer, buffer_size, nullptr)) {
         std::cout << "Value: " << buffer << std::endl;
     } else {
-        DWORD error = GetLastError();
-        std::cerr << "read_proc_memory failed. Error code: " << error << std::endl;
+        buffer[0] = '\0';
     }
-
-    return 0;
+	return buffer;
 }
