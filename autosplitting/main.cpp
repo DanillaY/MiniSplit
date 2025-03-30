@@ -4,6 +4,7 @@
 #include <csignal>
 #include <iterator>
 #include "memory_reader_win.hpp"
+#include "basic_proc_info.hpp"
 #include "thread_manager.hpp"
 
 /*
@@ -21,11 +22,11 @@
           -and flags like lboost_system-mgw14-mt-s-x64-1_87, lboost_thread-mgw14-mt-s-x64-1_87 are the names of .a files in that stage/lib directory
           also if you are building on windows with mingw64 you should use -lws2_32 flag to use windows socket api
     
-    after the compilation run .\autosplit localhost
+    after the compilation run .\autosplit game_name.exe localhost
 */
 
 void handle_sigint(int signal) {
-	//clean_up_alloc_emory
+    //clean_up_alloc_emory
     exit(0);
 }
 
@@ -38,17 +39,26 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-	Thread_Manager t_manager;
-	char* process_name = argv[1];
-	int pid = get_process_id_by_name(process_name);
-	uintptr_t base_module_address = get_base_address(pid); 
-
-	uintptr_t offsets1[] = {0x038CB78, 0x38, 0x644, 0x4, 0x18, 0x128, 0x8, 0x0};
-	int offsets_len1 = (sizeof(offsets1)/sizeof(offsets1[0]));
-	Signal_split sig = START;
+    Thread_Manager t_manager;
+    char* process_name = argv[1];
+    int pid = get_process_id_by_name(process_name);
+    uintptr_t base_module_address = get_base_address(pid);
+    Basic_Process_Info bpoci(process_name,base_module_address,pid);
     
-	t_manager.start_memory_reader_string(process_name,offsets1, "string to compare" ,base_module_address,offsets_len1,pid, sig , &t_manager);
-	t_manager.start_notifier(argc,argv,&t_manager);
+    uintptr_t offsets1[] = {0x038CB78, 0x38, 0x644, 0x4, 0x18, 0x128, 0x8, 0x0};
+    int offsets_len1 = (sizeof(offsets1)/sizeof(offsets1[0]));
 
+    uintptr_t offsets2[] = {0x38C7F4};
+    int offsets_len2 = (sizeof(offsets2)/sizeof(offsets2[0]));
+
+    int buffer = 0;
+    char* buffer_str = new char[20]; //buffer is the result of the chain dereference in read_proc_memory
+    char* buffer_str2 = new char[20];
+    
+    t_manager.start_memory_reader_string(bpoci, ".",false,buffer_str,offsets_len1,20,offsets1,Signal_split::START, &t_manager);
+    
+    t_manager.start_memory_reader(bpoci,buffer, 1, true, offsets2,offsets_len2,Signal_split::PAUSE, &t_manager);
+    t_manager.start_notifier(argc,argv,&t_manager);
+    
     return 0;
 }
