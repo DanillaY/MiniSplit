@@ -61,10 +61,9 @@ auto read_proc_memory_string(int pid, uintptr_t base_module , uintptr_t offsets[
     HANDLE handle = OpenProcess(PROCESS_VM_READ | PROCESS_VM_OPERATION |PROCESS_QUERY_INFORMATION, FALSE, pid);
     auto last_pointer = offsets_len > 1 ? add_all_offsets(handle,base_module, offsets, offsets_len) : base_module+offsets[0];
 
-    if (ReadProcessMemory(handle, LPCVOID(last_pointer), buffer, buffer_size, nullptr)) {
-        std::cout << "Value: " << buffer << std::endl;
-    } else {
-        buffer[0] = '\0';
+    if (ReadProcessMemory(handle, LPCVOID(last_pointer), buffer, buffer_size, nullptr) == false) {
+		buffer[0] = '\0';
     }
+	
     return buffer;
 }

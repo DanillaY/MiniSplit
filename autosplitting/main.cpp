@@ -43,22 +43,33 @@ int main(int argc, char* argv[])
     char* process_name = argv[1];
     int pid = get_process_id_by_name(process_name);
     uintptr_t base_module_address = get_base_address(pid);
-    Basic_Process_Info bpoci(process_name,base_module_address,pid);
-    
+	std::shared_ptr<Basic_Process_Info> bpi = std::make_shared<Basic_Process_Info>(process_name,base_module_address,pid);
+
     uintptr_t offsets1[] = {0x038CB78, 0x38, 0x644, 0x4, 0x18, 0x128, 0x8, 0x0};
     int offsets_len1 = (sizeof(offsets1)/sizeof(offsets1[0]));
 
     uintptr_t offsets2[] = {0x38C7F4};
     int offsets_len2 = (sizeof(offsets2)/sizeof(offsets2[0]));
 
-    int buffer = 0;
+	int buffer = 0;
     char* buffer_str = new char[20]; //buffer is the result of the chain dereference in read_proc_memory
     char* buffer_str2 = new char[20];
-    
-    t_manager.start_memory_reader_string(bpoci, ".",false,buffer_str,offsets_len1,20,offsets1,Signal_split::START, &t_manager);
-    
-    t_manager.start_memory_reader(bpoci,buffer, 1, true, offsets2,offsets_len2,Signal_split::PAUSE, &t_manager);
-    t_manager.start_notifier(argc,argv,&t_manager);
+
+	auto start_memory_reader_string = std::bind(&Thread_Manager::start_memory_reader_string, &t_manager,bpi, ".",false,buffer_str,offsets_len1,20,offsets1,Signal_split::START, &t_manager);
+	auto start_memory_reader = std::bind(&Thread_Manager::start_memory_reader,&t_manager,bpi,buffer, 1, true, offsets2,offsets_len2,Signal_split::PAUSE, &t_manager);
+	auto start_notifier = std::bind(&Thread_Manager::start_notifier, &t_manager, argc,argv,&t_manager);
+	
+	std::vector<std::function<void()>> all_functions = {start_memory_reader_string,start_memory_reader}; //put every reader function here
+
+	auto start_listen_active_process_terminate = std::bind(&Thread_Manager::start_listen_active_process_terminate, &t_manager, bpi, all_functions, &t_manager);
+
+	if(pid != 0) {
+		
+		start_memory_reader_string(bpi, "Saving preferences.",false,buffer_str,offsets_len1,20,offsets1,Signal_split::START, &t_manager);
+		start_memory_reader(bpi,buffer, 1, true, offsets2,offsets_len2,Signal_split::PAUSE, &t_manager);
+		start_listen_active_process_terminate(bpi, all_functions, &t_manager);
+		start_notifier(argc,argv,&t_manager);
+	}
     
     return 0;
 }

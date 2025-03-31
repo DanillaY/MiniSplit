@@ -50,7 +50,6 @@ int get_process_id_by_name(std::string proc_name){
 
         if(GetModuleBaseNameA(handler_proc, NULL, runnig_proc_name, sizeof(runnig_proc_name) / sizeof(char)) > 0){
             if(runnig_proc_name == proc_name){
-                std::cout << "Found the pid for "+ proc_name << std::endl;
                 CloseHandle(handler_proc);
                 return pid;
             }
@@ -59,6 +58,7 @@ int get_process_id_by_name(std::string proc_name){
         CloseHandle(handler_proc);
     }
 
+	std::cout << "Process with the set name was not found" << std::endl;
     return 0;
 }
 
