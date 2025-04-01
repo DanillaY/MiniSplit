@@ -1,5 +1,6 @@
 import threading
 import tkinter
+from autosplitting.socket_server import close_connection, socket_server_wrap
 from components.main_timer import draw_main_timer
 from components.splits import draw_splits
 from components.title import draw_title
@@ -26,11 +27,13 @@ def tkinter_loop(t : Timer, hotkeys_config: Hotkeys):
     rows = draw_splits(mainframe, t, True,preference_settings , split_file_exist, file_name, rows)
 
     label_main_timer = draw_main_timer(mainframe,preference_settings,rows,t)
-
+    
+    threading.Thread(target=socket_server_wrap,args=(t, label_main_timer,),daemon=True).start()
     threading.Thread(target=start_keyboard_listener,args=(t,label_main_timer,root,hotkeys_config,),daemon=True).start()
 
     def on_closing():
         t.stop()
+        close_connection()
         root.quit()
 
     root.protocol('WM_DELETE_WINDOW', on_closing)

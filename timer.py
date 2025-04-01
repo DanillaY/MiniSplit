@@ -107,7 +107,7 @@ class Timer:
     
     def split(self):
 
-        if self.running == False | self._pause_event.is_set():
+        if self.running == False:
             return
         
         split_i = self.split_manager.loaded_split_index

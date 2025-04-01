@@ -23,12 +23,12 @@ def start_keyboard_listener(t : Timer, label: Label, root: Tk, hotkeys_config: H
                 t.split()
                 
         #close the whole program
-        if key == keyboard.Key.esc:
-            t.stop()
-            if t.timer_thread != None:
-                t.timer_thread.join()
+        # if key == keyboard.Key.esc:
+        #     t.stop()
+        #     if t.timer_thread != None:
+        #         t.timer_thread.join()
                 
-            return False
+        #     return False TODO create keybinds
 
                
     with keyboard.Listener(on_press= on_press) as listener:
