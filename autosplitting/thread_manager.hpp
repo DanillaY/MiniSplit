@@ -4,6 +4,7 @@
 #include <csignal>
 #include <vector>
 #include <thread>
+#include <queue>
 #include "memory_reader_win.hpp"
 #include "signals_minisplit.hpp"
 #include "basic_pointer_info_minisplit.hpp"
@@ -19,14 +20,13 @@ class Thread_Manager {
         std::mutex mutex;
         std::condition_variable condition_var;
         
-        Signal_split signal; //used to store a command for minisplit socket
-        bool ready = false;
+        //Signal_split signal; //used to store a command for minisplit socket
+        //bool ready = false;
+		std::queue<Signal_split> signal_queue;
         std::atomic<bool> is_process_alive = true;
 
-		//TODO create a signal queue and move signal send checks to its own function
-
         Thread_Manager() {
-            signal = Signal_split::NONE;
+            
         }
 
         ~Thread_Manager() {
@@ -94,8 +94,7 @@ class Thread_Manager {
                 if(compared_prev || change_back || current_value_equal_comapred_to) {
                     {
                         std::lock_guard lock(mutex);
-                        ready = true;
-                        signal = bpoi.sig;
+                        signal_queue.push(bpoi.sig);
                         condition_var.notify_one();
                     }
                 }
@@ -125,8 +124,7 @@ class Thread_Manager {
 				if(compared_prev || change_back || current_value_equal_comapred_to) {
                     {
                         std::lock_guard lock(mutex);
-                        ready = true;
-                        signal = bpoi.sig;
+                        signal_queue.push(bpoi.sig);
                         condition_var.notify_one();
                     }
                 }
@@ -157,8 +155,7 @@ class Thread_Manager {
 					if(compared_prev || change_back || current_value_equal_comapred_to) {
                         {
                             std::lock_guard<std::mutex> lock(mutex);
-                            ready = true;
-                            signal = bpoi.sig;
+                            signal_queue.push(bpoi.sig);
                             condition_var.notify_one();
                         }
                     }
@@ -183,22 +180,24 @@ class Thread_Manager {
                 
                for(;;) {
                     std::unique_lock<std::mutex> lock(mutex);
-                    condition_var.wait(lock, [this]() { return ready; });
-            
-                    std::string buffer= To_String(signal);
-                    boost::system::error_code error;
-            
-                    boost::asio::write(socket, boost::asio::buffer(buffer), error);
-            
-                    //return values to its original state
-                    signal = Signal_split::NONE;
-                    ready = false;
+                    condition_var.wait(lock, [this]() { return signal_queue.empty() == false; });
 
+					while (signal_queue.empty() == false) {
+						Signal_split sig = signal_queue.front();
+						signal_queue.pop();
+					
+						std::string buffer= To_String(sig);
+						boost::system::error_code error;
+				
+						boost::asio::write(socket, boost::asio::buffer(buffer), error);
+				
+						if(error){
+							std::cerr << "Error while writing data to socket: "<< error.message();
+							return -1;
+						}
+					}
+					
                     std::this_thread::sleep_for(std::chrono::milliseconds(3));
-                    if(error){
-                        std::cerr << "Error while writing data to socket: "<< error.message();
-                        return -1;
-                    }
                 }
             }
             catch (std::exception& e)
@@ -227,7 +226,7 @@ class Thread_Manager {
             {
                 std::lock_guard lock(mutex);
                 std::cout << bpi->get_process_name() << " process was terminated" << std::endl;
-                ready = false;
+                signal_queue = std::queue<Signal_split>(); //clear all signals
                 bpi->set_base_module_address(mutex,0);
                 bpi->set_pid(mutex,0);
                 is_process_alive = false;
@@ -235,8 +234,7 @@ class Thread_Manager {
 				//send pause signal for igt
 				if(is_igt) {
 					std::lock_guard<std::mutex> lock(mutex);
-					ready = true;
-					signal = Signal_split::PAUSE;
+					signal_queue.push(Signal_split::PAUSE);
 					condition_var.notify_one();
 				}
 				
@@ -268,8 +266,7 @@ class Thread_Manager {
 
 				//send pause signal again to unpause
 				if(is_igt) {
-					ready = true;
-					signal = Signal_split::PAUSE;
+					signal_queue.push(Signal_split::PAUSE);
 					condition_var.notify_one();
 				}
 			}
