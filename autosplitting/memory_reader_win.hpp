@@ -43,8 +43,6 @@ uintptr_t add_all_offsets(HANDLE handle, uintptr_t base_module, std::vector<uint
     return pointer_with_offsets;
 }
 
-//use read_proc_memory to read any basic buffer types
-//template <typename T>
 int read_proc_memory(int pid, uintptr_t base_module , std::vector<uintptr_t> offsets, unsigned int offsets_len, int buffer) {
 
     HANDLE handle = OpenProcess(PROCESS_VM_READ | PROCESS_VM_OPERATION |PROCESS_QUERY_INFORMATION, FALSE, pid);
@@ -63,6 +61,20 @@ auto read_proc_memory_string(int pid, uintptr_t base_module , std::vector<uintpt
 
     if (ReadProcessMemory(handle, LPCVOID(last_pointer), buffer, buffer_size, nullptr) == false) {
 		buffer[0] = '\0';
+    }
+	
+    return buffer;
+}
+
+std::string read_proc_memory_string_test(int pid, uintptr_t base_module , std::vector<uintptr_t>offsets, unsigned int offsets_len, std::string buffer, size_t buffer_size) {
+
+    HANDLE handle = OpenProcess(PROCESS_VM_READ | PROCESS_VM_OPERATION |PROCESS_QUERY_INFORMATION, FALSE, pid);
+    auto last_pointer = offsets_len >= 1 ? add_all_offsets(handle,base_module, offsets, offsets_len) : base_module+offsets[0];
+
+	buffer.resize(buffer_size);
+
+    if (ReadProcessMemory(handle, LPCVOID(last_pointer), &buffer[0], buffer_size, nullptr) == false) {
+		buffer.clear();
     }
 	
     return buffer;

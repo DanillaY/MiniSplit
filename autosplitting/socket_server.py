@@ -48,7 +48,6 @@ def close_connection():
         s.close()
     inputs.clear()
 
-#wrap the server with select to wait for new conenctions 
 def socket_server_wrap(t: Timer, label: Label):
     server = init_socket_connection()
 
