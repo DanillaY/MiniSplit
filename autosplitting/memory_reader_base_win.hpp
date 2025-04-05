@@ -58,7 +58,7 @@ int get_process_id_by_name(std::string proc_name){
         CloseHandle(handler_proc);
     }
 
-	std::cout << "Process with the set name was not found" << std::endl;
+    std::cout << "Process with the set name was not found" << std::endl;
     return 0;
 }
 
