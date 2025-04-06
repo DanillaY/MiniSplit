@@ -1,7 +1,7 @@
 import json
 
 
-class Mini_Split_Preferences():
+class Minisplit_Preferences():
 	
 	def __init__(self):
 		try:
@@ -60,6 +60,12 @@ class Mini_Split_Preferences():
 			self.splits_prev_time_font = json_preferences['splits'][13]['prev_time_font']
 			self.splits_prev_time_font_size = json_preferences['splits'][14]['prev_time_font_size']
 			self.splits_prev_time_pady = json_preferences['splits'][15]['prev_time_pady']
+
+			self.sob_foreground =  json_preferences['sum_of_best'][0]['sob_foreground']
+			self.sob_background =  json_preferences['sum_of_best'][1]['sob_background']
+			self.sob_font = json_preferences['sum_of_best'][2]['sob_font']
+			self.sob_font_size = json_preferences['sum_of_best'][3]['sob_font_size']
+			self.sob_pady = json_preferences['sum_of_best'][4]['sob_pady']
 			
 		except Exception:
 			print('Error while parsing the preferences.json file')

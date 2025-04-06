@@ -1,7 +1,6 @@
 from tkinter import Label, Tk
 from pynput import keyboard
 from hotkey_timer import Hotkeys
-from split_manager import Splits_Manager
 from vk_enum import vk_codes
 from timer import Timer
 

@@ -3,12 +3,11 @@ import tkinter
 from tkinter import ttk
 
 from components.line import draw_a_line
-from preferences.preferences import Mini_Split_Preferences
-from split_manager import Splits_Manager
+from preferences.preferences import Minisplit_Preferences
 from timer import Timer
 
 
-def draw_splits(mainframe: tkinter.Frame, t: Timer, draw_with_split_desc: bool, pref: Mini_Split_Preferences, split_file_exist:bool, file_name:str, rows_count: int) -> int:
+def draw_splits(mainframe: tkinter.Frame, t: Timer, draw_with_split_desc: bool, pref: Minisplit_Preferences, split_file_exist:bool, file_name:str, rows_count: int) -> int:
 
     def draw_splits_description(rows_count: int) -> int:
         label_name_column = ttk.Label(mainframe,
@@ -51,7 +50,7 @@ def draw_splits(mainframe: tkinter.Frame, t: Timer, draw_with_split_desc: bool, 
         if draw_with_split_desc:
             rows_count = draw_splits_description(rows_count)
             
-        for split in json_splits['splits']:
+        for split in json_splits['splits_sum']:
             
             for split_name,split_time in split.items():
                 column = 0
@@ -105,7 +104,7 @@ def draw_splits(mainframe: tkinter.Frame, t: Timer, draw_with_split_desc: bool, 
 
         else:
             with open(f'./splits/example_splits.json', 'w') as splits:
-                json_splits_default = { 'game_name': 'thebestgameever','category': '100%','attempts': 10,'runner_src_account_url': '','sum_of_best': 99.89995,'personal_best': 115.0035,'splits':[{'split_name1': 88.35235},{'split_name2': 99.35235},{'split_name3': 100.3511},{'split_name4': 110.37535},{'split_name5': 115.0035}]}   
+                json_splits_default = { 'game_name': 'thebestgameever','category': '100%','attempts': 10,'runner_src_account_url': '','sum_of_best': 99.89995,'splits':[{'split_name1': 88.35235},{'split_name2': 99.35235},{'split_name3': 100.3511},{'split_name4': 110.37535},{'split_name5': 115.0035}], 'best_splits':[{'split_name1': 88.35235},{'split_name2': 99.35235},{'split_name3': 100.3511},{'split_name4': 110.37535},{'split_name5': 115.0035}]}   
                 rows_count = configure_rows(json_splits_default,rows_count)
                 json.dump(json_splits_default, splits, indent=4)
     except Exception as e:

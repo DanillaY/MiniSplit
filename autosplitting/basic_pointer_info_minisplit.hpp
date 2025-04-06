@@ -48,14 +48,4 @@ class Basic_Pointer_Info {
             this->sig = sig;
         }
         
-        size_t get_curr_set_value_size(std::string item, size_t default_size) {
-            std::cout<<item;
-            for (const auto& str : compared_to_set) {
-                if (str.find(item) != std::string::npos) {
-                    std::cout << "Found substring in: " << str << std::endl;
-                    return str.size(); 
-                }
-            }
-            return default_size;
-        }
 };

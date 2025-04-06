@@ -12,28 +12,48 @@ class Run_Info():
 class Splits_Manager():
     def __init__(self):
         #current_splits are not the same as splits that are beeing loaded from splits folder, current split means the one that wasnt saved in a file yet
-        self.current_splits = {}
-        self.loaded_splits = {}
+        self.current_splits_sum = {}
+        self.current_splits_segment = {}
+        self.loaded_splits_sum = {}
+        self.current_best_splits_sum = {}
+        self.current_best_splits_segment = {}
         
         self.label_time_diff_list = list()
         self.label_prev_time_list = list()
         self.loaded_split_index = 0
         
-        self.loaded_split_names = list()
-        self.loaded_split_values = list()
+        self.loaded_split_names_sum = list()
+        self.loaded_split_values_sum = list()
+        self.current_best_splits_names_sum = list()
+        self.current_best_splits_values_sum = list()
+        self.current_best_splits_names_segment = list()
+        self.current_best_splits_values_segment = list()
+        self.loaded_split_names_segment = list()
+        self.loaded_split_values_segment = list()
         
         self.run_info_loaded = Run_Info('','',0)
         self.run_info_unsaved = Run_Info('','',0)
 
         self.sum_of_best = 0.0
-        self.personal_best = 0.0
     
     def _set_class_values_from_json(self, json_loaded_splits):
-        self.loaded_splits = json_loaded_splits['splits']
-        self.current_splits = json_loaded_splits['splits']
+        self.loaded_splits_sum = json_loaded_splits['splits_sum']
+        self.current_splits_sum = json_loaded_splits['splits_sum']
+        self.current_splits_segment = json_loaded_splits['splits_segments']
+        self.current_best_splits_sum = json_loaded_splits['best_splits_sum']
+        self.current_best_splits_segment = json_loaded_splits['best_splits_segments']
 
-        self.loaded_split_names.extend([list(split.keys())[0] for split in json_loaded_splits['splits']])
-        self.loaded_split_values.extend([list(split.values())[0] for split in json_loaded_splits['splits']])
+        self.loaded_split_names_sum.extend([list(split.keys())[0] for split in json_loaded_splits['splits_sum']])
+        self.loaded_split_values_sum.extend([list(split.values())[0] for split in json_loaded_splits['splits_sum']])
+        
+        self.current_best_splits_names_sum.extend([list(split.keys())[0] for split in json_loaded_splits['best_splits_sum']])
+        self.current_best_splits_values_sum.extend([list(split.values())[0] for split in json_loaded_splits['best_splits_sum']])
+        
+        self.current_best_splits_names_segment.extend([list(split.keys())[0] for split in json_loaded_splits['best_splits_segments']])
+        self.current_best_splits_values_segment.extend([list(split.values())[0] for split in json_loaded_splits['best_splits_segments']])
+        
+        self.loaded_split_names_segment.extend([list(split.keys())[0] for split in json_loaded_splits['splits_segments']])
+        self.loaded_split_values_segment.extend([list(split.values())[0] for split in json_loaded_splits['splits_segments']])
         
         self.run_info_loaded.game_name = json_loaded_splits['game_name']
         self.run_info_loaded.category = json_loaded_splits['category']
@@ -41,8 +61,9 @@ class Splits_Manager():
         self.run_info_loaded.runner_src_account = json_loaded_splits['runner_src_account_url']
         self.run_info_unsaved = self.run_info_loaded
         
-        self.sum_of_best = float(json_loaded_splits['sum_of_best'])
-        self.personal_best = float(json_loaded_splits['personal_best'])
+        for split in self.current_best_splits_segment:
+            for _, value in split.items():
+                self.sum_of_best += float(value)
 
     #this will load the first encountered _split.json file
     def splits_exist(self) -> (bool | str):

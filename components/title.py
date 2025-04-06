@@ -2,11 +2,11 @@
 import tkinter
 
 from components.line import draw_a_line
-from preferences.preferences import Mini_Split_Preferences
+from preferences.preferences import Minisplit_Preferences
 from split_manager import Splits_Manager
 
 
-def draw_title(mainframe: tkinter.Frame, split_manager:Splits_Manager , pref:Mini_Split_Preferences ,rows_count: int, with_attempts: bool) -> int:
+def draw_title(mainframe: tkinter.Frame, split_manager:Splits_Manager , pref:Minisplit_Preferences ,rows_count: int, with_attempts: bool) -> int:
     
     #draw title row
     label_game_title = tkinter.Label(mainframe,

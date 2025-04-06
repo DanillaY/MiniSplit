@@ -13,26 +13,19 @@ class Timer:
         self.pause_end = 0.0
         self.paused_time_total = 0.0
         self.total_time_diff = 0.0
+        self.last_split_start = 0.0
+        self.last_split_end = 0.0
 
         self.is_pb = False
+        self.has_gold_splits = False
         self.has_hours = False
         self.running = False
         self.timer_thread = None
         self.split_manager = Splits_Manager()
         self._stop_event = threading.Event()
         self._pause_event = threading.Event()
-
-    def reset_timer(self, label:Label):
-
-        def redraw_loaded_values():
-            for diff in self.split_manager.label_time_diff_list:
-                diff.config(text='')
         
-            for i in range(len(self.split_manager.label_prev_time_list)):
-                prev_time = self.split_manager.loaded_split_values[i]
-                self.split_manager.label_prev_time_list[i].config(text=self.format_time_with_diff(prev_time))
-        
-        def save_pb_splits():
+    def save_pb_splits(self):
             splits_path = filedialog.asksaveasfilename(defaultextension=".json", filetypes=[("JSON files", "*.json")])
 
             if splits_path:
@@ -43,22 +36,36 @@ class Timer:
                                      'attempts': self.split_manager.run_info_unsaved.attempt_count,
                                      'runner_src_account_url': self.split_manager.run_info_unsaved.runner_src_account,
                                      'sum_of_best': self.split_manager.sum_of_best,
-                                     'personal_best': self.split_manager.personal_best ,
-                                     'splits': self.split_manager.current_splits}
+                                     'splits_sum': self.split_manager.current_splits_sum,
+                                     'best_splits_sum': self.split_manager.current_best_splits_sum,
+                                     'splits_segments': self.split_manager.current_splits_segment,
+                                     'best_splits_segments': self.split_manager.current_best_splits_segment}
                     
                     json_run_info_and_splits =  run_info_dict
                     json.dump(json_run_info_and_splits, f, indent=4)
+    
+    def redraw_loaded_values(self):
+            for diff in self.split_manager.label_time_diff_list:
+                diff.config(text='')
         
+            for i in range(len(self.split_manager.label_prev_time_list)):
+                prev_time = self.split_manager.loaded_split_values_sum[i]
+                self.split_manager.label_prev_time_list[i].config(text=self.format_time_with_diff(prev_time))
+    
+    def save_json_splits(self):
+        if self.is_pb | self.has_gold_splits:
+            response = messagebox.askyesno("Got new records!", "You have beaten some of your records!\nDo you want to save the splits?")
+            if response:
+                self.save_pb_splits()
+
+    def reset_timer(self, label:Label):
+
         if self.timer_thread != None:
             self._stop_event.set() 
             self.timer_thread.join()
 
-        if self.is_pb:
-            response = messagebox.askyesno("New personal best!", "You got a new personal best!\nDo you want to save the splits?")
-            if response:
-                save_pb_splits()
-            
-        redraw_loaded_values()
+        self.save_json_splits()
+        self.redraw_loaded_values()
 
         self.start = 0.0
         self.end = 0.0
@@ -66,8 +73,11 @@ class Timer:
         self.pause_end = 0.0
         self.paused_time_total = 0.0
         self.total_time_diff = 0.0
+        self.last_split_start = 0.0
+        self.last_split_end = 0.0
         self.running = False
         self.is_pb = False
+        self.has_gold_splits = False
 
         self.split_manager.run_info_unsaved.attempt_count += 1
         self.split_manager.loaded_split_index = 0
@@ -81,13 +91,27 @@ class Timer:
         if self.timer_thread != None:
             self._stop_event.set() 
             self.timer_thread.join()
+        
+        self.split_manager.current_splits_sum[-1]
+        current_time = ((self.end - self.start) - self.paused_time_total)
+
+        for key in self.split_manager.current_splits_sum[-1]:
+            if self.split_manager.current_splits_sum[-1][key] > current_time:
+                self.is_pb = True
+                self.split_manager.current_splits_sum[-1][key] = current_time
+
+        self.save_json_splits()
 
         self.end = time.time()
         self.pause_start = 0.0
         self.pause_end = 0.0
+        self.last_split_start = 0.0
+        self.last_split_end = 0.0
         self.paused_time_total = 0.0
 
         self.running = False
+        self.is_pb = False
+        self.has_gold_splits = False
         self._stop_event.clear()
         self._pause_event.clear()
 
@@ -111,16 +135,23 @@ class Timer:
             return
         
         split_i = self.split_manager.loaded_split_index
+        self.last_split_end = time.time()
 
         def update_split_labels(split_i: int)-> str:
             
-            old_time = self.split_manager.loaded_split_values[split_i]
+            old_time = self.split_manager.loaded_split_values_sum[split_i]
             current_time = ((self.end - self.start) - self.paused_time_total)
             sign = ''
 
             if old_time >= current_time:
                 sign = '-'
                 self.total_time_diff += (old_time - current_time) - self.total_time_diff
+                
+                if self.split_manager.current_best_splits_values_sum[split_i] > current_time:
+                    self.has_gold_splits = True
+                    for key  in self.split_manager.current_best_splits_sum[split_i]:
+                        self.split_manager.current_best_splits_sum[split_i][key] = current_time
+
             else:
                 sign = '+'
                 self.total_time_diff += (current_time - old_time) - self.total_time_diff
@@ -131,16 +162,24 @@ class Timer:
             return sign
         
         def change_curr_splits():
-            for key in self.split_manager.current_splits[split_i]:
-                self.split_manager.current_splits[split_i][key] = (self.end - self.start) - self.paused_time_total
+            for key in self.split_manager.current_splits_sum[split_i]:
+                self.split_manager.current_splits_sum[split_i][key] = (self.end - self.start) - self.paused_time_total
+            
+            for key in self.split_manager.current_splits_segment[split_i]:
+                self.split_manager.current_splits_segment[split_i][key] = self.last_split_end - self.last_split_start
+            
+            for key in self.split_manager.current_best_splits_segment[split_i]:
+                self.split_manager.current_best_splits_segment[split_i][key] = (self.last_split_end - self.last_split_start) if self.split_manager.current_best_splits_segment[split_i][key] > (self.last_split_end - self.last_split_start) else self.split_manager.current_best_splits_segment[split_i][key]
 
-        if split_i + 1 < len(self.split_manager.loaded_split_values):
+        if split_i + 1 < len(self.split_manager.loaded_split_values_sum):
+            
             update_split_labels(split_i)
             change_curr_splits()
 
+            self.last_split_start = time.time()
             self.split_manager.loaded_split_index += 1
         
-        if split_i + 1 == len(self.split_manager.loaded_split_values):
+        if split_i + 1 == len(self.split_manager.loaded_split_values_sum):
             self._stop_event.set()
             self.is_pb = update_split_labels(split_i) == '-' #check if the last split was faster then in the loaded file
             change_curr_splits()
@@ -154,19 +193,20 @@ class Timer:
                 break
             
             if self._pause_event.is_set():
-                time.sleep(0.03)
+                time.sleep(0.004)
                 continue
                 
             self.end = time.time()
             text_formated = self.format_time_without_diff()
 
             label.config(text=text_formated)
-            time.sleep(0.02)
+            time.sleep(0.004)
 
     def start_timer(self, label: Label):
 
         if self.running == False:
             self.start = time.time()
+            self.last_split_start = time.time()
             self.running = True
             self.timer_thread = threading.Thread(target=self.update_main_timer,args=(label,),daemon=True)
             self.timer_thread.start()

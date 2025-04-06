@@ -3,9 +3,8 @@
     "category": "100%",
     "attempts": 10,
     "runner_src_account_url": "",
-    "sum_of_best": 99.89995,
-    "personal_best": 115.0035,
-    "splits": [
+    "sum_of_best": 513.43465,
+    "splits_sum": [
         {
             "split_name1": 88.35235
         },
@@ -21,5 +20,56 @@
         {
             "split_name5": 115.0035
         }
-    ]
+    ],
+	"best_splits_sum": [
+		{
+            "split_name1": 88.35235
+        },
+        {
+            "split_name2": 99.35235
+        },
+        {
+            "split_name3": 100.3511
+        },
+        {
+            "split_name4": 110.37535
+        },
+        {
+            "split_name5": 115.0035
+        }
+	],
+	"splits_segments": [
+		{
+            "split_name1": 23.145032
+        },
+        {
+            "split_name2": 17.976496
+        },
+        {
+            "split_name3":  31.795682
+        },
+        {
+            "split_name4": 22.222264
+        },
+        {
+            "split_name5": 19.864026
+        }
+	],
+	"best_splits_segments": [
+		{
+            "split_name1": 20.145032
+        },
+        {
+            "split_name2": 17.976496
+        },
+        {
+            "split_name3":  30.795682
+        },
+        {
+            "split_name4": 23.222264
+        },
+        {
+            "split_name5": 16.868
+        }
+	]
 }

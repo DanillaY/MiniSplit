@@ -7,20 +7,20 @@
 		{"category_foreground" : "white"},
 		{"category_background" : "black"},
 
-		{"game_name_font" : "0xProto Nerd Font"},
-		{"category_font" : "0xProto Nerd Font"},
+		{"game_name_font" : "Franklin Gothic Medium"},
+		{"category_font" : "Franklin Gothic Medium"},
 		
-		{"game_name_font_size" : 12},
-		{"category_font_size" : 10}
+		{"game_name_font_size" : 14},
+		{"category_font_size" : 12}
 	],
 	"line": [
-		{"min_width": 230},
-		{"height": 1.5},
+		{"min_width": 160},
+		{"height": 1.6},
 		{"color": "white"}
 	],
 	"main_timer": [
-		{"font":  "0xProto Nerd Font"},
-		{"font_size": 15},
+		{"font":  "Franklin Gothic Medium"},
+		{"font_size": 18},
 		{"timer_foreground" : "white"},
 		{"timer_background" : "black"}
 	],
@@ -29,37 +29,44 @@
 			"description_settings": [
 				{"name_column_foreground" : "white"},
 				{"name_column_background" : "black"},
-				{"name_column_font" : "0xProto Nerd Font"},
-				{"name_column_font_size" : 9},
+				{"name_column_font" : "Franklin Gothic Medium Italic"},
+				{"name_column_font_size" : 11},
 				
 				{"diff_column_foreground" : "white"},
 				{"diff_column_background" : "black"},
-				{"diff_column_font" : "0xProto Nerd Font"},
-				{"diff_column_font_size" : 9},
+				{"diff_column_font" : "Franklin Gothic Medium Italic"},
+				{"diff_column_font_size" : 11},
 
 				{"prev_time_column_foreground" : "white"},
 				{"prev_time_column_background" : "black"},
-				{"prev_time_column_font" : "0xProto Nerd Font"},
-				{"prev_time_column_font_size" : 9}
+				{"prev_time_column_font" : "Franklin Gothic Medium Italic"},
+				{"prev_time_column_font_size" : 11}
 			]
 		},
 
 		{"split_name_foreground" : "white"},
 		{"split_name_background" : "black"},
-		{"split_name_font" : "0xProto Nerd Font"},
-		{"split_name_font_size" : 9},
+		{"split_name_font" : "Franklin Gothic Medium"},
+		{"split_name_font_size" : 10},
 		{"split_name_pady" : 5},
 
 		{"time_diff_foreground" : "white"},
 		{"time_diff_background" : "black"},
-		{"time_diff_font" : "0xProto Nerd Font"},
-		{"time_diff_font_size" : 7},
+		{"time_diff_font" : "Franklin Gothic Medium"},
+		{"time_diff_font_size" : 9},
 		{"time_diff_pady" : 5},
 
 		{"prev_time_foreground" : "white"},
 		{"prev_time_background" : "black"},
-		{"prev_time_font" : "0xProto Nerd Font"},
-		{"prev_time_font_size" : 9},
+		{"prev_time_font" : "Franklin Gothic Medium"},
+		{"prev_time_font_size" : 10},
 		{"prev_time_pady" : 5}
+	],
+	"sum_of_best" : [
+		{"sob_foreground" : "white"},
+		{"sob_background" : "black"},
+		{"sob_font" : "Franklin Gothic Medium"},
+		{"sob_font_size" : 10},
+		{"sob_pady" : 15}
 	]
 }
