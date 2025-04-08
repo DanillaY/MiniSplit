@@ -15,6 +15,7 @@ def tkinter_loop(t : Timer, hotkeys_config: Hotkeys):
 
     root = Tk()
     root.title('MiniSplit')
+    root.attributes('-topmost', True)
     root.grid_rowconfigure(0, weight=1)
     root.grid_columnconfigure(0, weight=1)
     

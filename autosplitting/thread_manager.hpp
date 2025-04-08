@@ -189,14 +189,13 @@ class Thread_Manager {
                         boost::system::error_code error;
                 
                         boost::asio::write(socket, boost::asio::buffer(buffer), error);
-                
+						
+						std::this_thread::sleep_for(std::chrono::milliseconds(2));
                         if(error){
                             std::cerr << "Error while writing data to socket: "<< error.message();
                             return -1;
                         }
                     }
-                    
-                    std::this_thread::sleep_for(std::chrono::milliseconds(3));
                 }
             }
             catch (std::exception& e)

@@ -1,3 +1,4 @@
+from decimal import Decimal
 import json
 import threading
 import time
@@ -13,8 +14,13 @@ class Timer:
         self.pause_end = 0.0
         self.paused_time_total = 0.0
         self.total_time_diff = 0.0
+        
         self.last_split_start = 0.0
         self.last_split_end = 0.0
+        self.last_split_pause_start = 0.0
+        self.last_split_pause_end = 0.0
+        self.last_split_pause_total = 0.0
+        self.last_split_pause_index = 0
 
         self.is_pb = False
         self.has_gold_splits = False
@@ -22,10 +28,17 @@ class Timer:
         self.running = False
         self.timer_thread = None
         self.split_manager = Splits_Manager()
+
         self._stop_event = threading.Event()
         self._pause_event = threading.Event()
         
     def save_pb_splits(self):
+            #calculate sum of best
+            sob: Decimal = 0.0
+            for split in self.split_manager.current_best_splits_segment:
+                sob += Decimal(list(split.values())[0])
+            self.split_manager.sum_of_best = sob
+
             splits_path = filedialog.asksaveasfilename(defaultextension=".json", filetypes=[("JSON files", "*.json")])
 
             if splits_path:
@@ -53,7 +66,7 @@ class Timer:
                 self.split_manager.label_prev_time_list[i].config(text=self.format_time_with_diff(prev_time))
     
     def save_json_splits(self):
-        if self.is_pb | self.has_gold_splits:
+        if (self.is_pb | self.has_gold_splits) & self._stop_event.is_set() == True:
             response = messagebox.askyesno("Got new records!", "You have beaten some of your records!\nDo you want to save the splits?")
             if response:
                 self.save_pb_splits()
@@ -71,10 +84,15 @@ class Timer:
         self.end = 0.0
         self.pause_start = 0.0
         self.pause_end = 0.0
+        self.last_split_pause_start = 0.0
+        self.last_split_pause_end = 0.0
         self.paused_time_total = 0.0
         self.total_time_diff = 0.0
         self.last_split_start = 0.0
         self.last_split_end = 0.0
+        self.last_split_pause_total = 0.0
+        self.last_split_pause_index = 0
+        self.last_split_paused_split_index = 0
         self.running = False
         self.is_pb = False
         self.has_gold_splits = False
@@ -107,6 +125,11 @@ class Timer:
         self.pause_end = 0.0
         self.last_split_start = 0.0
         self.last_split_end = 0.0
+        self.last_split_pause_start = 0.0
+        self.last_split_pause_end = 0.0
+        self.last_split_pause_total = 0.0
+        self.last_split_pause_index = 0
+        self.last_split_paused_split_index = 0
         self.paused_time_total = 0.0
 
         self.running = False
@@ -121,17 +144,23 @@ class Timer:
             return
 
         if self._pause_event.is_set() == False:
+            if (self.last_split_pause_index != self.split_manager.loaded_split_index) | (self.last_split_pause_index == 0):
+                self.last_split_pause_start = time.time()
+
             self.pause_start = time.time()
             self._pause_event.set()
 
         else:
+            self.last_split_pause_end = time.time()
             self.pause_end = time.time()
+
+            self.last_split_pause_total += self.last_split_pause_end - self.last_split_pause_start
             self.paused_time_total += self.pause_end - self.pause_start
             self._pause_event.clear()
     
     def split(self):
 
-        if self.running == False:
+        if self.running == False | self._stop_event.is_set() == True:
             return
         
         split_i = self.split_manager.loaded_split_index
@@ -166,10 +195,12 @@ class Timer:
                 self.split_manager.current_splits_sum[split_i][key] = (self.end - self.start) - self.paused_time_total
             
             for key in self.split_manager.current_splits_segment[split_i]:
-                self.split_manager.current_splits_segment[split_i][key] = self.last_split_end - self.last_split_start
+                self.split_manager.current_splits_segment[split_i][key] = (self.last_split_end - self.last_split_start) - self.last_split_pause_total
             
             for key in self.split_manager.current_best_splits_segment[split_i]:
-                self.split_manager.current_best_splits_segment[split_i][key] = (self.last_split_end - self.last_split_start) if self.split_manager.current_best_splits_segment[split_i][key] > (self.last_split_end - self.last_split_start) else self.split_manager.current_best_splits_segment[split_i][key]
+               segment_time = (self.last_split_end - self.last_split_start) - self.last_split_pause_total
+               if self.split_manager.current_best_splits_segment[split_i][key] > segment_time:
+                   self.split_manager.current_best_splits_segment[split_i][key] = segment_time
 
         if split_i + 1 < len(self.split_manager.loaded_split_values_sum):
             
@@ -177,14 +208,19 @@ class Timer:
             change_curr_splits()
 
             self.last_split_start = time.time()
+            self.last_split_pause_end = 0.0
+            self.last_split_pause_total = 0.0
             self.split_manager.loaded_split_index += 1
-        
+            self.last_split_paused_split_index = self.split_manager.loaded_split_index
+            
         if split_i + 1 == len(self.split_manager.loaded_split_values_sum):
             self._stop_event.set()
             self.is_pb = update_split_labels(split_i) == '-' #check if the last split was faster then in the loaded file
             change_curr_splits()
 
             self.split_manager.loaded_split_index = 0
+            self.last_split_paused_split_index = 0
+            self.last_split_pause_total = 0.0
 
     def update_main_timer(self, label:Label):
 
@@ -195,12 +231,12 @@ class Timer:
             if self._pause_event.is_set():
                 time.sleep(0.004)
                 continue
-                
+
             self.end = time.time()
             text_formated = self.format_time_without_diff()
 
             label.config(text=text_formated)
-            time.sleep(0.004)
+            time.sleep(0.04)
 
     def start_timer(self, label: Label):
 
@@ -221,18 +257,19 @@ class Timer:
     #main calculating function
     def format_time_with_diff(self, seconds:float) -> str:
         minutes = int(seconds // 60)
-        hours = int(minutes // 60)
         remaining_seconds = int(seconds % 60)
         milliseconds = int((seconds - int(seconds)) * 1000)
 
-        text_formated = ''
+        text_formatted = ''
 
-        if self.has_hours == False:
-            text_formated = f'{minutes:02}:{remaining_seconds:02}:{milliseconds:03}'
+        if not self.has_hours:  # Assuming this flag controls whether hours are included or not
+            text_formatted = f'{minutes:02}:{remaining_seconds:02}:{milliseconds:03}'
         else:
-            text_formated = f'{hours:02}:{minutes:02}:{remaining_seconds:02}:{milliseconds:03}'
-        
-        return text_formated
+            hours = int(minutes // 60)  # Calculate hours properly
+            minutes = minutes % 60      # Correct the minutes for hours overflows
+            text_formatted = f'{hours:02}:{minutes:02}:{remaining_seconds:02}:{milliseconds:03}'
+
+        return text_formatted
     
     def stop(self):
         self._stop_event.set()

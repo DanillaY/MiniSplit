@@ -66,8 +66,8 @@ def draw_splits(mainframe: tkinter.Frame, t: Timer, draw_with_split_desc: bool, 
                                             font=(pref.splits_split_name_font, pref.splits_split_name_font_size),
                                             foreground=pref.splits_split_name_foreground,
                                             background=pref.splits_split_name_background,
-                                            anchor='center')
-                label_split_name.grid(row=rows_count, column=column, sticky=(tkinter.N,tkinter.S,tkinter.E, tkinter.W))
+                                            anchor='w')
+                label_split_name.grid(row=rows_count, column=column, sticky=(tkinter.W), padx=(10,0))
 
                 #fill the second column with the timesave/timelose (empty from the start)
                 column += 1
@@ -87,8 +87,8 @@ def draw_splits(mainframe: tkinter.Frame, t: Timer, draw_with_split_desc: bool, 
                                             font=(pref.splits_prev_time_font, pref.splits_prev_time_font_size),
                                             foreground=pref.splits_prev_time_foreground,
                                             background=pref.splits_prev_time_background,
-                                            anchor='center')
-                label_prev_time.grid(row=rows_count, column=column, sticky=(tkinter.N,tkinter.S,tkinter.E, tkinter.W))
+                                            anchor='e')
+                label_prev_time.grid(row=rows_count, column=column, sticky=(tkinter.E), padx=(0,10))
                 t.split_manager.label_prev_time_list.append(label_prev_time)
 
                 rows_count+= 1

@@ -1,3 +1,4 @@
+from decimal import Decimal
 import json
 from pathlib import Path
 import re
@@ -34,7 +35,7 @@ class Splits_Manager():
         self.run_info_loaded = Run_Info('','',0)
         self.run_info_unsaved = Run_Info('','',0)
 
-        self.sum_of_best = 0.0
+        self.sum_of_best: Decimal = 0.0
     
     def _set_class_values_from_json(self, json_loaded_splits):
         self.loaded_splits_sum = json_loaded_splits['splits_sum']
@@ -63,7 +64,7 @@ class Splits_Manager():
         
         for split in self.current_best_splits_segment:
             for _, value in split.items():
-                self.sum_of_best += float(value)
+                self.sum_of_best += Decimal(value)
 
     #this will load the first encountered _split.json file
     def splits_exist(self) -> (bool | str):

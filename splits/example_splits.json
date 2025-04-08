@@ -1,75 +1,75 @@
 {
     "game_name": "thebestgameever",
     "category": "100%",
-    "attempts": 10,
+    "attempts": 12,
     "runner_src_account_url": "",
-    "sum_of_best": 513.43465,
+    "sum_of_best": 1106.1222360134125,
     "splits_sum": [
         {
-            "split_name1": 88.35235
+            "split_name1": 321.1316440105438
         },
         {
-            "split_name2": 99.35235
+            "split_name2": 543.392138004303
         },
         {
-            "split_name3": 100.3511
+            "split_name3": 855.4068293571472
         },
         {
-            "split_name4": 110.37535
+            "split_name4": 1005.5642580986023
         },
         {
-            "split_name5": 115.0035
+            "split_name5": 1106.1222360134125
         }
     ],
-	"best_splits_sum": [
-		{
-            "split_name1": 88.35235
+    "best_splits_sum": [
+        {
+            "split_name1": 321.1316440105438
         },
         {
-            "split_name2": 99.35235
+            "split_name2": 543.392138004303
         },
         {
-            "split_name3": 100.3511
+            "split_name3": 855.4068293571472
         },
         {
-            "split_name4": 110.37535
+            "split_name4": 1005.5642580986023
         },
         {
-            "split_name5": 115.0035
+            "split_name5": 1106.1222360134125
         }
-	],
-	"splits_segments": [
-		{
-            "split_name1": 23.145032
+    ],
+    "splits_segments": [
+        {
+            "split_name1": 325.7588438987732
         },
         {
-            "split_name2": 17.976496
+            "split_name2": 234.07521414756775
         },
         {
-            "split_name3":  31.795682
+            "split_name3": 318.9068503379822
         },
         {
-            "split_name4": 22.222264
+            "split_name4": 155.01982927322388
         },
         {
-            "split_name5": 19.864026
+            "split_name5": 104.42541933059692
         }
-	],
-	"best_splits_segments": [
-		{
-            "split_name1": 20.145032
+    ],
+    "best_splits_segments": [
+        {
+            "split_name1": 325.33987855911255
         },
         {
-            "split_name2": 17.976496
+            "split_name2": 233.37341713905334
         },
         {
-            "split_name3":  30.795682
+            "split_name3": 358.49268102645874
         },
         {
-            "split_name4": 23.222264
+            "split_name4": 264.2645568847656
         },
         {
-            "split_name5": 16.868
+            "split_name5": 103.5233883857727
         }
-	]
+    ]
 }
