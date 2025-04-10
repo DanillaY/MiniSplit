@@ -2,7 +2,8 @@ import threading
 import tkinter
 from autosplitting.socket_server import close_connection, socket_server_wrap
 from components.main_timer import draw_main_timer
-from components.sob import draw_sum_of_best
+from components.possible_time_save import draw_possible_time_save
+from components.sum_of_best import draw_sum_of_best
 from components.splits import draw_splits
 from components.title import draw_title
 from hotkey_timer import Hotkeys
@@ -30,6 +31,7 @@ def tkinter_loop(t : Timer, hotkeys_config: Hotkeys):
 
     label_main_timer,rows = draw_main_timer(mainframe,preference_settings,rows,t)
     rows = draw_sum_of_best(mainframe, rows,preference_settings,t.split_manager,t)
+    rows = draw_possible_time_save(mainframe, rows,preference_settings,t.split_manager,t)
     
     threading.Thread(target=socket_server_wrap,args=(t, label_main_timer,),daemon=True).start()
     threading.Thread(target=start_keyboard_listener,args=(t,label_main_timer,root,hotkeys_config,),daemon=True).start()

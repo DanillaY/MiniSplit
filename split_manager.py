@@ -1,7 +1,7 @@
-from decimal import Decimal
 import json
 from pathlib import Path
 import re
+import tkinter
 
 class Run_Info():
     def __init__(self, game_name:str, category:str,attempt_count:int,runner_src_account_url:str = ''):
@@ -21,6 +21,8 @@ class Splits_Manager():
         
         self.label_time_diff_list = list()
         self.label_prev_time_list = list()
+        self.label_possible_time_save: tkinter.Label = None
+        self.label_sum_of_best: tkinter.Label = None
         self.loaded_split_index = 0
         
         self.loaded_split_names_sum = list()
@@ -35,7 +37,11 @@ class Splits_Manager():
         self.run_info_loaded = Run_Info('','',0)
         self.run_info_unsaved = Run_Info('','',0)
 
-        self.sum_of_best: Decimal = 0.0
+        self.sum_of_best = 0.0
+        self.possible_time_save = 0.0
+        
+        self.loaded_sum_of_best = 0.0
+        self.loaded_possible_time_save = 0.0
     
     def _set_class_values_from_json(self, json_loaded_splits):
         self.loaded_splits_sum = json_loaded_splits['splits_sum']
@@ -62,10 +68,6 @@ class Splits_Manager():
         self.run_info_loaded.runner_src_account = json_loaded_splits['runner_src_account_url']
         self.run_info_unsaved = self.run_info_loaded
         
-        for split in self.current_best_splits_segment:
-            for _, value in split.items():
-                self.sum_of_best += Decimal(value)
-
     #this will load the first encountered _split.json file
     def splits_exist(self) -> (bool | str):
         dir = Path('./splits/')
