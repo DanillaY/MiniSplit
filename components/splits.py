@@ -9,6 +9,10 @@ from timer import Timer
 
 def draw_splits(mainframe: tkinter.Frame, t: Timer, draw_with_split_desc: bool, pref: Minisplit_Preferences, split_file_exist:bool, file_name:str, rows_count: int) -> int:
 
+    #clear all values in case if the user will load the other splits file
+    t.split_manager.label_prev_time_list.clear()
+    t.split_manager.label_time_diff_list.clear()
+
     def draw_splits_description(rows_count: int) -> int:
         label_name_column = ttk.Label(mainframe,
                                       text= 'split name',

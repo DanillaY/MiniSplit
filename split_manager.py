@@ -23,6 +23,7 @@ class Splits_Manager():
         self.label_prev_time_list = list()
         self.label_possible_time_save: tkinter.Label = None
         self.label_sum_of_best: tkinter.Label = None
+        self.label_main_timer : tkinter.Label = None
         self.loaded_split_index = 0
         
         self.loaded_split_names_sum = list()
@@ -69,15 +70,15 @@ class Splits_Manager():
         self.run_info_unsaved = self.run_info_loaded
         
     #this will load the first encountered _split.json file
-    def splits_exist(self) -> (bool | str):
+    def load_split_json(self, file_name= '') -> (bool | str):
         dir = Path('./splits/')
         pattern = r'.*_splits.json$'
 
         try:
             for file in dir.iterdir():
-                if file.is_file() and re.match(pattern, file.name):
+                if file.is_file() and re.match(pattern, file.name) and file.suffix == '.json':
                     
-                    with open(dir.name+ '/' + file.name, 'r') as loaded_splits:
+                    with open((dir.name+ '/' + file.name) if file_name == '' else (dir.name+ '/' + file_name), 'r') as loaded_splits :
                         json_loaded_splits = json.load(loaded_splits)
                         self._set_class_values_from_json(json_loaded_splits)
 

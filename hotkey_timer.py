@@ -3,7 +3,6 @@ from pathlib import Path
 from queue import Queue
 import queue
 import threading
-from pynput import keyboard
 
 from vk_enum import is_special_key, vk_codes
 
@@ -12,13 +11,15 @@ class Hotkeys:
                  start_keys: set ,
                  pause_keys: set ,
                  reset_keys: set, 
-                 quit_keys: set):
+                 quit_keys: set,
+                 load_key: set):
         
         self.start_key = start_keys
         self.pause_key = pause_keys
         self.reset_key = reset_keys
         self.split_key = split_keys
         self.quit_key = quit_keys
+        self.load_split_key = load_key
 
 def parse_combination_to_keys(json_hotkeys: dict, key_command: str):
         result_combination = set()
@@ -38,10 +39,11 @@ def init_hotkeys_config(config_queue: Queue):
                             [vk_codes.NUMPAD_NUM_1],
                             [vk_codes.NUMPAD_NUM_2],
                             [vk_codes.NUMPAD_NUM_3],
-                            [vk_codes.SHIFT_L, vk_codes.Q]) #those are the default values
+                            [vk_codes.SHIFT_L, vk_codes.Q],
+                            [vk_codes.SHIFT_L,vk_codes.L]) #those are the default values
 
     if config_path.is_file() == False:
-        json_hotkeys_default = {'split': 'NUMPAD_NUM_0','start/stop_timer':'NUMPAD_NUM_1', 'pause/unpause_timer':'NUMPAD_NUM_2', 'reset_timer':'NUMPAD_NUM_3', 'quit':'SHIFT_L,Q'}
+        json_hotkeys_default = {'split': 'NUMPAD_NUM_0','start/stop_timer':'NUMPAD_NUM_1', 'pause/unpause_timer':'NUMPAD_NUM_2', 'reset_timer':'NUMPAD_NUM_3', 'quit':'SHIFT_L,Q', 'load_split':'SHIFT_L,L'} 
         with open('hotkeys.json', 'w') as hotkeys:
             json.dump(json_hotkeys_default, hotkeys, indent=4)
             
@@ -55,6 +57,7 @@ def init_hotkeys_config(config_queue: Queue):
                 hotkey_config.reset_key = parse_combination_to_keys(json_hotkeys,'reset_timer')
                 hotkey_config.split_key = parse_combination_to_keys(json_hotkeys,'split')
                 hotkey_config.quit_key = parse_combination_to_keys(json_hotkeys,'quit')
+                hotkey_config.load_split_key = parse_combination_to_keys(json_hotkeys,'load_split')
         except:
             print('Error while parsing the hotkey values, check if thers an incorrect key name or delete hotkeys.json to create a default config')    
 

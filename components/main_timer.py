@@ -20,6 +20,8 @@ def draw_main_timer(mainframe: tkinter.Frame,pref: Minisplit_Preferences ,rows: 
                                 anchor='center')
     label_main_timer.grid(row=rows, columnspan=3, sticky=(tkinter.S,tkinter.E,tkinter.W))
     rows +=1
-    threading.Thread(target=t.reset_timer,args=(label_main_timer,),daemon=True).start()
+    
+    t.split_manager.label_main_timer = label_main_timer
+    threading.Thread(target=t.reset_timer,daemon=True).start()
     
     return (label_main_timer,rows)

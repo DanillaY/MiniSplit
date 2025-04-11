@@ -1,6 +1,6 @@
 from hotkey_timer import start_hotkeys_thread
 from timer import Timer
-from tkinter_layout import tkinter_loop
+from tkinter_manager import tkinter_loop
 
 if __name__ == "__main__": 
 

@@ -60,7 +60,7 @@ class Thread_Manager {
     
         void start_notifier(int argc, char* argv[], Thread_Manager* t_manager) {
             std::cout<<"Started notifier" << std::endl;
-            notifier_thread= std::thread(&Thread_Manager::notify_on_split, t_manager , argc, argv);
+            notifier_thread= std::thread(&Thread_Manager::notify_on_split_async, t_manager , argc, argv);
             notifier_thread.join();
         }
 
@@ -163,40 +163,59 @@ class Thread_Manager {
             }
         }
 
-        int notify_on_split(int argc, char* argv[]) {
+        void write_to_socket_async(std::string& buffer, boost::asio::ip::tcp::socket& socket, boost::asio::io_context& io_context) {
+            boost::system::error_code error;
+            
+            boost::asio::async_write(socket, boost::asio::buffer(buffer), [&io_context, &socket](boost::system::error_code& err, size_t bytes_transfered) {
+                if(err){
+                    std::cerr << "Error while writing data to socket: "<< err.message();
+                    return;
+                }
+
+                auto timer = std::make_shared<boost::asio::steady_timer>(io_context, boost::asio::chrono::milliseconds(2));
+                
+                timer->async_wait([timer](const boost::system::error_code& error) {
+                    if (error) {
+                        std::cout << "Error while sending buffer to socket, error code: " << error;
+                    }
+                });
+            });   
+        }
+
+        int notify_on_split_async(int argc, char* argv[]) {
 
             try
             {
                 using boost::asio::ip::tcp;
 
                 boost::asio::io_context io_context;
-        
                 tcp::resolver resolver(io_context);
+
                 tcp::resolver::results_type endpoints = resolver.resolve(argv[2], "5554");
-        
                 tcp::socket socket(io_context);
                 boost::asio::connect(socket, endpoints);
                 
+                std::thread io_thread([&io_context]() {
+                    io_context.run();
+                });
+
                for(;;) {
                     std::unique_lock<std::mutex> lock(mutex);
                     condition_var.wait(lock, [this]() { return signal_queue.empty() == false; });
 
                     while (signal_queue.empty() == false) {
+
                         Signal_split sig = signal_queue.front();
                         signal_queue.pop();
+                        lock.unlock();
                     
                         std::string buffer= To_String(sig);
-                        boost::system::error_code error;
-                
-                        boost::asio::write(socket, boost::asio::buffer(buffer), error);
-						
-						std::this_thread::sleep_for(std::chrono::milliseconds(2));
-                        if(error){
-                            std::cerr << "Error while writing data to socket: "<< error.message();
-                            return -1;
-                        }
+                        write_to_socket_async(buffer, socket, io_context);
+                        lock.lock();
                     }
                 }
+
+                io_thread.join();
             }
             catch (std::exception& e)
             {

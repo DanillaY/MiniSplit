@@ -37,7 +37,7 @@ def start_listening(conn: socket.socket, t: Timer, label: Label):
                     
                 case 'START':
                     print('start')
-                    t.start_timer(label);
+                    t.start_timer();
                 
                 case 'NONE':
                     print('Socket received a NONE signal')

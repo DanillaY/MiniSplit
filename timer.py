@@ -8,6 +8,15 @@ from components.sum_of_best import calculate_sum_of_best
 from split_manager import Splits_Manager
 
 class Timer:
+
+    _Timer_instanse = None
+
+    def __new__(self, *args, **kwargs):
+        if self._Timer_instanse == None:
+            self._Timer_instanse = super().__new__(self)
+
+        return self._Timer_instanse
+
     def __init__(self):
         self.start = 0.0
         self.end = 0.0
@@ -32,7 +41,7 @@ class Timer:
 
         self._stop_event = threading.Event()
         self._pause_event = threading.Event()
-        
+
     def save_pb_splits(self):
 
         from components.sum_of_best import calculate_sum_of_best
@@ -63,9 +72,12 @@ class Timer:
         for i in range(len(self.split_manager.label_prev_time_list)):
             prev_time = self.split_manager.loaded_split_values_sum[i]
             self.split_manager.label_prev_time_list[i].config(text=self.format_time_with_diff(prev_time))
-    
-        self.split_manager.label_sum_of_best.config(text=self.format_time_with_diff(self.split_manager.loaded_sum_of_best))
-        self.split_manager.label_possible_time_save.config(text=self.format_time_with_diff(self.split_manager.loaded_possible_time_save))
+        
+        if self.split_manager.label_sum_of_best != None:
+            self.split_manager.label_sum_of_best.config(text=self.format_time_with_diff(self.split_manager.loaded_sum_of_best))
+        
+        if self.split_manager.label_possible_time_save != None:
+            self.split_manager.label_possible_time_save.config(text=self.format_time_with_diff(self.split_manager.loaded_possible_time_save))
     
     def save_json_splits(self):
         if (self.is_pb | self.has_gold_splits) & self._stop_event.is_set() == True:
@@ -73,7 +85,7 @@ class Timer:
             if response:
                 self.save_pb_splits()
 
-    def reset_timer(self, label:Label):
+    def reset_timer(self):
         if self.timer_thread != None:
             self._stop_event.set() 
             self.timer_thread.join()
@@ -102,7 +114,7 @@ class Timer:
         self.split_manager.possible_time_save = self.split_manager.loaded_possible_time_save
         self.split_manager.loaded_split_index = 0
 
-        label.config(text='00:00:000' if self.has_hours == False else '00:00:00:000')
+        self.split_manager.label_main_timer.config(text='00:00:000' if self.has_hours == False else '00:00:00:000')
         self._stop_event.clear()
         self._pause_event.clear()
     
@@ -163,7 +175,6 @@ class Timer:
             return
         
         current_time = time.time()
-
         split_i = self.split_manager.loaded_split_index
         self.last_split_end = current_time
 
@@ -189,8 +200,12 @@ class Timer:
             
             calculate_possible_time_save(self.split_manager)
             calculate_sum_of_best(self.split_manager)
-            self.split_manager.label_possible_time_save.config(text=self.format_time_with_diff(self.split_manager.possible_time_save))
-            self.split_manager.label_sum_of_best.config(text=self.format_time_with_diff(self.split_manager.sum_of_best))
+
+            if self.split_manager.label_possible_time_save != None:
+                self.split_manager.label_possible_time_save.config(text=self.format_time_with_diff(self.split_manager.possible_time_save))
+
+            if self.split_manager.label_sum_of_best != None:
+                self.split_manager.label_sum_of_best.config(text=self.format_time_with_diff(self.split_manager.sum_of_best))
             
             return sign
 
@@ -224,7 +239,7 @@ class Timer:
             self.split_manager.loaded_split_index = 0
             self.last_split_pause_total = 0.0
 
-    def update_main_timer(self, label:Label):
+    def update_main_timer(self):
 
         while self.running:
             if  self._stop_event.is_set():
@@ -237,16 +252,15 @@ class Timer:
             self.end = time.time()
             text_formated = self.format_time_without_diff()
 
-            label.config(text=text_formated)
-            time.sleep(0.01)
+            self.split_manager.label_main_timer.config(text=text_formated)
+            time.sleep(0.004)
 
-    def start_timer(self, label: Label):
-
+    def start_timer(self):
         if self.running == False:
             self.start = time.time()
             self.last_split_start = time.time()
             self.running = True
-            self.timer_thread = threading.Thread(target=self.update_main_timer,args=(label,),daemon=True)
+            self.timer_thread = threading.Thread(target=self.update_main_timer,daemon=True)
             self.timer_thread.start()
         else:
             self.stop_timer()
