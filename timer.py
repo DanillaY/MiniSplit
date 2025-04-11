@@ -74,7 +74,6 @@ class Timer:
                 self.save_pb_splits()
 
     def reset_timer(self, label:Label):
-
         if self.timer_thread != None:
             self._stop_event.set() 
             self.timer_thread.join()
@@ -108,8 +107,10 @@ class Timer:
         self._pause_event.clear()
     
     def stop_timer(self):
-        if self.timer_thread is not None:
+        
+        if self.timer_thread != None:
             self._stop_event.set()
+            self.running = False
             self.timer_thread.join()
 
         current_time = time.time()
@@ -132,7 +133,6 @@ class Timer:
         self.last_split_pause_total = 0.0
         self.last_split_pause_index = 0
         self.paused_time_total = 0.0
-        self.running = False
         self.is_pb = False
         self.has_gold_splits = False
         self._stop_event.clear()

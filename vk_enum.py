@@ -89,3 +89,10 @@ class vk_codes(Enum):
     SHIFT_R = keyboard.Key.shift_r
     CTRL_L = keyboard.Key.ctrl_l
     CTRL_R = keyboard.Key.ctrl_r
+    
+def is_special_key(key: int | keyboard.Key):
+    if isinstance(key.value, int):
+        return False
+    
+    elif isinstance(key.value, keyboard.Key):
+        return True
