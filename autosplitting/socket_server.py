@@ -18,7 +18,7 @@ def start_listening(conn: socket.socket, t: Timer, label: Label):
     conn.setblocking(0)
    
     while True:
-        readable, _, _ = select.select([conn], [], [], 0.03)
+        readable, _, _ = select.select([conn], [], [], 0.01)
         if readable:
             data = conn.recv(8) #adjust the amount of bytes if you have to transfer a bigger signal size
 
