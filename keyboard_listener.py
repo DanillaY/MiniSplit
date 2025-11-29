@@ -14,7 +14,6 @@ def start_keyboard_listener(tk_manager, hotkeys_config: Hotkeys):
     def on_press(key: keyboard.Key | keyboard.KeyCode):
         vk = key.vk if hasattr(key, 'vk') else key.value.vk
         key_pressed_set.add(vk)
-        print(key_pressed_set, " pressed")
 
         if key_pressed_set == hotkeys_config.start_key:
             #we have to start a start_timer function in a new thread so that if the run is a pb run the tkinter messagebox would not prevent the on_realease call 
@@ -60,7 +59,6 @@ def start_keyboard_listener(tk_manager, hotkeys_config: Hotkeys):
             else:
                 key_pressed_set.discard(vk)
 
-            print(key_pressed_set, " unpressed")
         except Exception as e:
             print(f'Error in keyboard listener: {str(e)}')
         
