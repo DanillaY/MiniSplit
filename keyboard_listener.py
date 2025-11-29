@@ -1,15 +1,20 @@
 import threading
-from tkinter import Label, filedialog
+from tkinter import filedialog
 from pynput import keyboard
 from autosplitting.socket_server import close_connection
 from hotkey_timer import Hotkeys
+from display_detector import DisplayBackend, detect_display_backend
 
 def start_keyboard_listener(tk_manager, hotkeys_config: Hotkeys):
     key_pressed_set = set()
+    is_xwayland = detect_display_backend() == DisplayBackend.XWAYLAND
+    SHIFT_PRESSES_XWAYLAND = {65505, 65506}
+    SHIFT_RELEASE_XWAYLAND = 65032
 
     def on_press(key: keyboard.Key | keyboard.KeyCode):
         vk = key.vk if hasattr(key, 'vk') else key.value.vk
         key_pressed_set.add(vk)
+        print(key_pressed_set, " pressed")
 
         if key_pressed_set == hotkeys_config.start_key:
             #we have to start a start_timer function in a new thread so that if the run is a pb run the tkinter messagebox would not prevent the on_realease call 
@@ -47,7 +52,15 @@ def start_keyboard_listener(tk_manager, hotkeys_config: Hotkeys):
     def on_realease(key):
         try:
             vk = key.vk if hasattr(key, 'vk') else key.value.vk
-            key_pressed_set.discard(vk)
+            if is_xwayland and vk == SHIFT_RELEASE_XWAYLAND:
+                key_pressed_set.difference_update(SHIFT_PRESSES_XWAYLAND)
+                stuck_keys = [k for k in key_pressed_set if k not in SHIFT_PRESSES_XWAYLAND]
+                for k in stuck_keys:
+                    key_pressed_set.discard(k)
+            else:
+                key_pressed_set.discard(vk)
+
+            print(key_pressed_set, " unpressed")
         except Exception as e:
             print(f'Error in keyboard listener: {str(e)}')
         

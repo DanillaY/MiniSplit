@@ -1,7 +1,7 @@
 from enum import Enum
 from pynput import keyboard
 
-class vk_codes(Enum):
+class vk_codes_win(Enum):
 
     NUMPAD_NUM_0 = 96 
     NUMPAD_NUM_1 = 97

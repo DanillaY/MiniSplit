@@ -41,6 +41,7 @@ class Timer:
 
         self._stop_event = threading.Event()
         self._pause_event = threading.Event()
+        self._save_pop_up = threading.Event()
 
     def save_pb_splits(self):
 
@@ -80,10 +81,13 @@ class Timer:
             self.split_manager.label_possible_time_save.config(text=self.format_time_with_diff(self.split_manager.loaded_possible_time_save))
     
     def save_json_splits(self):
-        if (self.is_pb | self.has_gold_splits) & self._stop_event.is_set() == True:
+        print(self.is_pb, self.has_gold_splits)
+        if (self.is_pb or self.has_gold_splits) and self._stop_event.is_set() == True and self._save_pop_up.is_set() == False:
+            self._save_pop_up.set()
             response = messagebox.askyesno("Got new records!", "You have beaten some of your records!\nDo you want to save the splits?")
             if response:
                 self.save_pb_splits()
+            self._save_pop_up.clear()
 
     def reset_timer(self):
         if self.timer_thread != None:
