@@ -1,15 +1,26 @@
+#include "memory_reader_base_linux.hpp"
+#include <cstdint>
 #include <mutex>
 #include <condition_variable>
 #include <iostream>
-#include <csignal>
+#include <string>
 #include <vector>
 #include <thread>
 #include <queue>
-#include "memory_reader_win.hpp"
+#include <boost/asio.hpp>
+#ifdef _WIN32
+    #include "memory_reader_win.hpp"
+#else 
+    #include "memory_reader_linux.hpp"
+#endif
 #include "signals_minisplit.hpp"
 #include "basic_pointer_info_minisplit.hpp"
+#include "basic_proc_info.hpp"
 
 #pragma once
+
+//signature for different implementations of read_proc_memory, used in read_data
+using read_function = std::function<int(int pid, uintptr_t base_addr, const std::vector<uintptr_t>& offsets, bool is_64bit)>;
 
 class Thread_Manager {
 
@@ -42,20 +53,20 @@ class Thread_Manager {
         }
         
         template <typename T>
-        void start_memory_reader_c_string(Basic_Process_Info* bpi, Basic_Pointer_Info<T> bpoi ,unsigned int buffer_size, Thread_Manager* t_manager) {
-            data_readers_threads.push_back(std::thread(&Thread_Manager::read_data_c_string<char*>, t_manager, bpi, bpoi, buffer_size));
+        void start_memory_reader_c_string(Basic_Process_Info* bpi, Basic_Pointer_Info<T> bpoi ,unsigned int buffer_size, Thread_Manager* t_manager, uintptr_t override_base = 0) {
+            data_readers_threads.push_back(std::thread(&Thread_Manager::read_data_c_string<char*>, t_manager, bpi, bpoi, buffer_size, override_base));
             data_readers_threads.back().detach();
         }
 
         template <typename T>
-        void start_memory_reader_string(Basic_Process_Info* bpi, Basic_Pointer_Info<T> bpoi ,unsigned int buffer_size, Thread_Manager* t_manager) {
-            data_readers_threads.push_back(std::thread(&Thread_Manager::read_data_string_using_sets<std::string>, t_manager, bpi, bpoi, buffer_size));
+        void start_memory_reader_string(Basic_Process_Info* bpi, Basic_Pointer_Info<T> bpoi ,unsigned int buffer_size, Thread_Manager* t_manager, uintptr_t override_base = 0, bool ignore_case = false) {
+            data_readers_threads.push_back(std::thread(&Thread_Manager::read_data_string_using_sets<std::string>, t_manager, bpi, bpoi, buffer_size, override_base, ignore_case));
             data_readers_threads.back().detach();
         }
 
         template <typename T>
-        void start_memory_reader(Basic_Process_Info* bpi, Basic_Pointer_Info<T> bpoi, Thread_Manager* t_manager) {
-            data_readers_threads.push_back(std::thread(&Thread_Manager::read_data<T>, t_manager,bpoi, bpi));
+        void start_memory_reader(Basic_Process_Info* bpi, Basic_Pointer_Info<T> bpoi, Thread_Manager* t_manager, read_function reader, uintptr_t override_base = 0) {
+            data_readers_threads.push_back(std::thread(&Thread_Manager::read_data<T>, t_manager,bpoi, bpi, reader, override_base));
             data_readers_threads.back().detach();
         }
     
@@ -68,23 +79,36 @@ class Thread_Manager {
         void start_listen_active_process_terminate(Basic_Process_Info* bpi, std::vector<std::function<void ()>> all_functions, bool is_igt ,Thread_Manager* t_manager) {
             std::thread t(&Thread_Manager::listen_active_process_terminate,t_manager, bpi , all_functions, is_igt);
             t.detach();
-            
         }
 
     private:
         template <typename T>
-        void read_data_c_string(Basic_Process_Info* bpi, Basic_Pointer_Info<T> bpoi ,size_t buffer_size) {
+        void read_data_c_string(Basic_Process_Info* bpi, Basic_Pointer_Info<T> bpoi ,size_t buffer_size,  uintptr_t override_base = 0) {
             
             int pid = bpi->get_pid();
-            uintptr_t base_module_address = bpi->get_base_offset();
+            bool is_64bit = bpi->get_is_64bit();
+            uintptr_t base_module_address = override_base ? override_base : bpi->get_base_offset();
             
             char previous_value[buffer_size];
             char current_value[buffer_size];
 
             while(is_process_alive) {
 
+                #ifdef _WIN32
+                    char* result =  read_proc_memory_c_string(
+                        pid, base_module_address, 
+                        bpoi.offsets, bpoi.offsets_len-1,
+                        bpoi.buffer, buffer_size);
+                #else
+                    char* result =  read_proc_memory_c_string(
+                        pid, base_module_address,
+                        bpoi.offsets, bpoi.offsets_len-1,
+                        bpoi.buffer, buffer_size,
+                        is_64bit);
+                #endif
+
                 std::strcpy(previous_value, current_value);
-                std::strcpy(current_value, read_proc_memory_c_string(pid, base_module_address, bpoi.offsets, bpoi.offsets_len-1, bpoi.buffer, buffer_size));
+                std::strcpy(current_value, result);
 
                 std::this_thread::sleep_for(std::chrono::milliseconds(4));
                 bool change_back = bpoi.with_change_back == true ? (strcmp(previous_value, current_value) != 0 && strcmp(current_value, bpoi.compared_to) == 0) || (strcmp(current_value, previous_value) != 0 && strcmp(previous_value, bpoi.compared_to)) == 0: false;
@@ -102,10 +126,18 @@ class Thread_Manager {
         }
 
         template <typename T>
-        void read_data_string_using_sets(Basic_Process_Info* bpi, Basic_Pointer_Info<T> bpoi ,size_t buffer_size) {
+        void read_data_string_using_sets(Basic_Process_Info* bpi, Basic_Pointer_Info<T> bpoi ,size_t buffer_size, uintptr_t override_base = 0, bool ignore_case = false) {
             
             int pid = bpi->get_pid();
-            uintptr_t base_module_address = bpi->get_base_offset();
+            bool is64bit = bpi->get_is_64bit();
+            uintptr_t base_module_address = override_base ? override_base : bpi->get_base_offset();
+
+            auto case_insensitive_compare = [](const std::string& str1, const std::string& str2) {
+                return std::equal(str1.begin(), str1.end(), str2.begin(), 
+                    [](char a, char b) {
+                        return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
+                    });
+            };
             
             std::string previous_value(buffer_size,'\0');
             std::string current_value(buffer_size,'\0');
@@ -113,14 +145,18 @@ class Thread_Manager {
             while(is_process_alive) {
 
                 previous_value = current_value;
-                current_value = read_proc_memory_string_unknown_size(pid, base_module_address, bpoi.offsets, bpoi.offsets_len-1, bpoi.buffer, buffer_size);
+                current_value = read_proc_memory_string_unknown_size(pid, base_module_address, bpoi.offsets, bpoi.offsets_len, buffer_size, is64bit);
+
+                if(ignore_case == true) {
+                    std::transform(current_value.begin(), current_value.end(), current_value.begin(),[](unsigned char c){ return std::tolower(c); });
+                }
                 
                 std::this_thread::sleep_for(std::chrono::milliseconds(4));
 
                 bool change_back = bpoi.with_change_back == true ? (previous_value != current_value && bpoi.compared_to_set.count(current_value) > 0) || (current_value != previous_value && bpoi.compared_to_prev_set.count(previous_value) > 0): false;
                 bool compared_prev = bpoi.with_compare_prev == true ? bpoi.compared_to_set.count(current_value) > 0 && bpoi.compared_to_prev_set.count(previous_value) > 0 : false;
                 bool current_value_equal_comapred_to = bpoi.with_change_back == true || bpoi.with_compare_prev ==true ? false : bpoi.compared_to_set.count(current_value) > 0 && current_value != previous_value && bpoi.sig != Signal_split::NONE;		
-                
+            
                 if(compared_prev || change_back || current_value_equal_comapred_to) {
                     {
                         std::lock_guard lock(mutex);
@@ -132,26 +168,27 @@ class Thread_Manager {
         }
 
         template <typename T>
-        void read_data(Basic_Pointer_Info<T> bpoi, Basic_Process_Info* bpi) {
+        void read_data(Basic_Pointer_Info<T> bpoi, Basic_Process_Info* bpi,read_function reader, uintptr_t override_base = 0) {
 
             int pid = bpi->get_pid();
-            uintptr_t base_module_address = bpi->get_base_offset();
+            bool is_64bit = bpi->get_is_64bit();
+            uintptr_t base_module_address = override_base ? override_base : bpi->get_base_offset();
 
             if(base_module_address != 0 && bpoi.offsets_len > 0) {
-                int current_value = 0;
-                int previous_value = 0;
+                T current_value = T();
+                T previous_value = T();
 
                 while(is_process_alive) {
 
                     previous_value = current_value;
-                    current_value = read_proc_memory(pid, base_module_address, bpoi.offsets, bpoi.offsets_len-1, bpoi.buffer);
+                    current_value = static_cast<T>(reader(pid, base_module_address, bpoi.offsets, is_64bit));
 
                     std::this_thread::sleep_for(std::chrono::milliseconds(4));
 
                     bool change_back = bpoi.with_change_back == true ? (previous_value != current_value && bpoi.compared_to == current_value) || (current_value != previous_value && bpoi.compared_to != current_value): false;
                     bool compared_prev = bpoi.with_compare_prev == true ? bpoi.compared_to == current_value && bpoi.compared_to_prev == previous_value : false;
                     bool current_value_equal_comapred_to = bpoi.with_change_back == true || bpoi.with_compare_prev ==true ? false : bpoi.compared_to == current_value && current_value != previous_value && bpoi.sig != Signal_split::NONE;		
-                    
+
                     if(compared_prev || change_back || current_value_equal_comapred_to) {
                         {
                             std::lock_guard<std::mutex> lock(mutex);
@@ -242,13 +279,13 @@ class Thread_Manager {
 
         void listen_active_process_terminate(Basic_Process_Info* bpi, std::vector<std::function<void()>> all_functions, bool is_igt) {
 
-            char* proc_name = bpi->get_process_name();;
+            char* proc_name = bpi->get_process_name();
             int pid = get_process_id_by_name(proc_name);
 
             while(is_process_alive) {
                 pid = get_process_id_by_name(proc_name);
 
-                if(pid == 0) {
+                if(pid == 0 || pid == -1) {
                     break;
                 }
                 std::this_thread::sleep_for(std::chrono::milliseconds(900));
@@ -260,6 +297,7 @@ class Thread_Manager {
                 signal_queue = std::queue<Signal_split>(); //clear all signals
                 bpi->set_base_module_address(mutex,0);
                 bpi->set_pid(mutex,0);
+                bpi->set_is_64bit(mutex,false);
                 is_process_alive = false;
                 
                 //send pause signal for igt
@@ -292,6 +330,7 @@ class Thread_Manager {
             {
                 std::lock_guard lock(mutex);
                 bpi->set_pid(mutex,pid);
+                bpi->set_is_64bit(mutex,is_64bit_process(pid));
                 bpi->set_base_module_address(mutex,get_base_address(pid));
                 is_process_alive = true;
 

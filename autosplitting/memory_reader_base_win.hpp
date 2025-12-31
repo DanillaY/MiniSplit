@@ -1,13 +1,13 @@
 //useful for debugging purposes
 #include <Windows.h>
-#include <iostream>
 #include <psapi.h>
+#include <iostream>
 #include <string>
 
 /*
     this file contains functions for general purpose use (windows only)
 */
-void print_pointer_info(HANDLE handle, void* pointer) {
+inline void print_pointer_info(HANDLE handle, void* pointer) {
     MEMORY_BASIC_INFORMATION mbi;
 
     if (VirtualQueryEx(handle, pointer, &mbi, sizeof(mbi))) {
@@ -20,7 +20,7 @@ void print_pointer_info(HANDLE handle, void* pointer) {
     } 
 }
 
-bool is_64bit_process(HANDLE handle) {
+inline bool is_64bit_process(HANDLE handle) {
     BOOL isWow64 = FALSE;
 
     if (IsWow64Process(handle, &isWow64)) {
@@ -30,7 +30,7 @@ bool is_64bit_process(HANDLE handle) {
     return false;
 }
  
-int get_process_id_by_name(std::string proc_name){
+inline int get_process_id_by_name(std::string proc_name){
     DWORD proc_arr[1024] = {};
     DWORD cb_needed = 0;
     DWORD process_count = 0;
@@ -62,7 +62,7 @@ int get_process_id_by_name(std::string proc_name){
     return 0;
 }
 
-uintptr_t get_base_address(int pid) {
+inline uintptr_t get_base_address(int pid) {
 
     HANDLE handler = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
     HMODULE main_module;
