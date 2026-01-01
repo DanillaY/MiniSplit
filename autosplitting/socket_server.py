@@ -4,18 +4,20 @@ from tkinter import Label
 
 from timer import Timer
 
+PORT = 5554
+
 inputs = list()
 
 def init_socket_connection() -> socket.socket: 
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind(('localhost', 5554))
+    server.bind(('localhost', PORT))
     server.listen(1)
 
-    print("Server started on port 5554...")
+    print("Server started on port {PORT}...")
     return server
 
 def start_listening(conn: socket.socket, t: Timer, label: Label):
-    conn.setblocking(0)
+    conn.setblocking(False)
    
     while True:
         readable, _, _ = select.select([conn], [], [], 0.01)
@@ -36,8 +38,11 @@ def start_listening(conn: socket.socket, t: Timer, label: Label):
                     t.split()
                     
                 case 'START':
-                    print('start')
-                    t.start_timer();
+                    #logic will not allow to send start call multiple times during a run, 
+                    #run could still be finished preemptively by pressing a start keybind but not via an autosplitter
+                    if(t.running == False):
+                        print('start')
+                        t.start_timer()
                 
                 case 'NONE':
                     print('Socket received a NONE signal')

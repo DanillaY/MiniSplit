@@ -42,8 +42,6 @@
     after the compilation run .\autosplit game_name.exe localhost
 */
 
-Basic_Process_Info* Basic_Process_Info::bpi = nullptr;
-
 void handle_sigint(int signal) {
     //clean_up_alloc_memory
     exit(0);
@@ -126,7 +124,7 @@ int main(int argc, char* argv[])
         all_functions, true,
         &t_manager);
 
-    if(pid != 0) {
+    if(pid > 0) {
         
         start_memory_reader_start();
         start_memory_reader_pause();
