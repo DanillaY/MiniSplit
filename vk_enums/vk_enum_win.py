@@ -89,6 +89,9 @@ class vk_codes_win(Enum):
     SHIFT_R = keyboard.Key.shift_r
     CTRL_L = keyboard.Key.ctrl_l
     CTRL_R = keyboard.Key.ctrl_r
+
+SHIFT_L_VK = vk_codes_win.SHIFT_L.value.value.vk
+SHIFT_R_VK = vk_codes_win.SHIFT_R.value.value.vk
     
 def is_special_key(key: int | keyboard.Key):
     if isinstance(key.value, int):
@@ -96,3 +99,8 @@ def is_special_key(key: int | keyboard.Key):
     
     elif isinstance(key.value, keyboard.Key):
         return True
+
+def normalize(vk):
+    if vk in (SHIFT_L_VK, SHIFT_R_VK):
+        return SHIFT_ANY
+    return UPPER_TO_BASE.get(vk, vk)

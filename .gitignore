@@ -1,4 +1,6 @@
 **/__pycache__/
 .env
+.vscode
+build
 *.exe
 start.ps1

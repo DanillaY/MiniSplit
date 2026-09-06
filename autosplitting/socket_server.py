@@ -13,7 +13,7 @@ def init_socket_connection() -> socket.socket:
     server.bind(('localhost', PORT))
     server.listen(1)
 
-    print("Server started on port {PORT}...")
+    print(f'Server started on port {PORT}...')
     return server
 
 def start_listening(conn: socket.socket, t: Timer, label: Label):

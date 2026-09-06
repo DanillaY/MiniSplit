@@ -13,7 +13,7 @@ struct Hook {
 };
 
 //has to be loaded with the executable to be able to read the specified function pointer
-Hook hook_function_32(
+inline Hook hook_function_32(
     uintptr_t target_function,
     uintptr_t hook_entry,
     size_t replace_byte_size

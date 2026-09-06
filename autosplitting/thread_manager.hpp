@@ -1,4 +1,5 @@
 #include "memory_reader_base_linux.hpp"
+#include <cstddef>
 #include <cstdint>
 #include <mutex>
 #include <condition_variable>
@@ -23,6 +24,9 @@
 using read_function = std::function<int(int pid, uintptr_t base_addr, const std::vector<uintptr_t>& offsets, bool is_64bit)>;
 
 class Thread_Manager {
+
+    private: 
+        const int memory_reading_delay = 10;
 
     public:
         std::vector<std::thread> data_readers_threads;
@@ -110,7 +114,7 @@ class Thread_Manager {
                 std::strcpy(previous_value, current_value);
                 std::strcpy(current_value, result);
 
-                std::this_thread::sleep_for(std::chrono::milliseconds(4));
+                std::this_thread::sleep_for(std::chrono::milliseconds(memory_reading_delay));
                 bool change_back = bpoi.with_change_back == true ? (strcmp(previous_value, current_value) != 0 && strcmp(current_value, bpoi.compared_to) == 0) || (strcmp(current_value, previous_value) != 0 && strcmp(previous_value, bpoi.compared_to)) == 0: false;
                 bool compared_prev = bpoi.with_compare_prev == true ? strcmp(bpoi.compared_to, current_value) == 0 && strcmp(bpoi.compared_to_prev, previous_value) == 0 : false;
                 bool current_value_equal_comapred_to = bpoi.with_change_back == true || bpoi.with_compare_prev ==true ? false : strcmp(bpoi.compared_to, current_value) == 0 && strcmp(current_value, previous_value) != 0 && bpoi.sig != Signal_split::NONE;
@@ -151,7 +155,7 @@ class Thread_Manager {
                     std::transform(current_value.begin(), current_value.end(), current_value.begin(),[](unsigned char c){ return std::tolower(c); });
                 }
                 
-                std::this_thread::sleep_for(std::chrono::milliseconds(4));
+                std::this_thread::sleep_for(std::chrono::milliseconds(memory_reading_delay));
 
                 bool change_back = bpoi.with_change_back == true ? (previous_value != current_value && bpoi.compared_to_set.count(current_value) > 0) || (current_value != previous_value && bpoi.compared_to_prev_set.count(previous_value) > 0): false;
                 bool compared_prev = bpoi.with_compare_prev == true ? bpoi.compared_to_set.count(current_value) > 0 && bpoi.compared_to_prev_set.count(previous_value) > 0 : false;
@@ -174,18 +178,17 @@ class Thread_Manager {
             bool is_64bit = bpi->get_is_64bit();
             uintptr_t base_module_address = override_base ? override_base : bpi->get_base_offset();
 
-            if(base_module_address != 0 && bpoi.offsets_len > 0) {
+            if(base_module_address != 0) {
                 T current_value = T();
                 T previous_value = T();
-
+                
                 while(is_process_alive) {
 
                     previous_value = current_value;
                     current_value = static_cast<T>(reader(pid, base_module_address, bpoi.offsets, is_64bit));
 
-                    std::this_thread::sleep_for(std::chrono::milliseconds(4));
-
-                    bool change_back = bpoi.with_change_back == true ? (previous_value != current_value && bpoi.compared_to == current_value) || (current_value != previous_value && bpoi.compared_to != current_value): false;
+                    std::this_thread::sleep_for(std::chrono::milliseconds(memory_reading_delay));
+                    bool change_back = bpoi.with_change_back == true ? (previous_value != current_value && bpoi.compared_to == current_value) || (current_value != previous_value && bpoi.compared_to != current_value && previous_value == bpoi.compared_to): false;
                     bool compared_prev = bpoi.with_compare_prev == true ? bpoi.compared_to == current_value && bpoi.compared_to_prev == previous_value : false;
                     bool current_value_equal_comapred_to = bpoi.with_change_back == true || bpoi.with_compare_prev ==true ? false : bpoi.compared_to == current_value && current_value != previous_value && bpoi.sig != Signal_split::NONE;		
 
@@ -270,7 +273,7 @@ class Thread_Manager {
             }
             catch (std::exception& e)
             {
-                std::cerr << e.what() << std::endl;
+                std::cout << e.what() << std::endl;
                 return -1;
             }
         
@@ -288,7 +291,7 @@ class Thread_Manager {
                 if(pid == 0 || pid == -1) {
                     break;
                 }
-                std::this_thread::sleep_for(std::chrono::milliseconds(900));
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
             }
 
             {

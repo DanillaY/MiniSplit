@@ -5,6 +5,7 @@ import queue
 import threading
 
 from display_detector import DisplayBackend
+from vk_enums.vk_enum_xwayland import normalize, is_special_key, vk_codes_xwayland, UPPER_TO_BASE, SHIFT_ANY
 from vk_enums.vk_enum_win import is_special_key, vk_codes_win
 from vk_enums.vk_enum_xwayland import is_special_key, vk_codes_xwayland
 
@@ -24,26 +25,26 @@ class Hotkeys:
         self.load_split_key = load_key
 
 def parse_combination_to_keys(json_hotkeys: dict, key_command: str, display: DisplayBackend):
-        result_combination = set()
-        key_names = json_hotkeys[key_command].split(',') 
+    result_combination = set()
+    key_names = json_hotkeys[key_command].split(',')
 
-        for key in key_names:
-            key = key.upper()
-            if key in vk_codes_win.__members__ and display == DisplayBackend.WINDOWS:
-                result_combination.add(vk_codes_win[key].value.value.vk if is_special_key(vk_codes_win[key]) else vk_codes_win[key].value)
-            elif key in vk_codes_xwayland.__members__ and display == DisplayBackend.XWAYLAND:
-                
-                vk_to_add = -1
-                if is_special_key(vk_codes_xwayland[key]):
-                    vk_to_add = vk_codes_xwayland[key].value.value.vk
-                else:
-                    vk_to_add = vk_codes_xwayland[key].value
-
-                result_combination.add(vk_to_add)
+    for key in key_names:
+        key = key.upper()
+        if key in vk_codes_win.__members__ and display == DisplayBackend.WINDOWS:
+            result_combination.add(vk_codes_win[key].value.value.vk if is_special_key(vk_codes_win[key]) else vk_codes_win[key].value)
+        elif key in vk_codes_xwayland.__members__ and display == DisplayBackend.XWAYLAND:
+            member = vk_codes_xwayland[key]
+            if key.startswith("UPPER_"):
+                result_combination.add(SHIFT_ANY)
+                result_combination.add(UPPER_TO_BASE[member.value])
+            elif is_special_key(member):
+                result_combination.add(normalize(member.value.value.vk))
             else:
-                print("Error while parsing key combination from config")
+                result_combination.add(member.value)
+        else:
+            print("Error while parsing key combination from config")
 
-        return result_combination
+    return result_combination
 
 def init_hotkeys_config(config_queue: Queue, display: DisplayBackend):
 
@@ -68,29 +69,28 @@ def init_hotkeys_config(config_queue: Queue, display: DisplayBackend):
     if config_path.is_file() == False:
         json_hotkeys_default = {
             'split': 'NUMPAD_NUM_0',
-            'start/stop_timer':'NUMPAD_NUM_1', 
-            'pause/unpause_timer':'NUMPAD_NUM_2', 
-            'reset_timer':'NUMPAD_NUM_3', 
-            'quit':'SHIFT_L,UPPER_Q',
-            'load_split':'SHIFT_L,UPPER_L'
-        } 
+            'start/stop_timer': 'NUMPAD_NUM_1',
+            'pause/unpause_timer': 'NUMPAD_NUM_2',
+            'reset_timer': 'NUMPAD_NUM_3',
+            'quit': 'SHIFT_L,UPPER_Q',
+            'load_split': 'SHIFT_L,UPPER_L'
+        }
 
         with open('hotkeys.json', 'w') as hotkeys:
             json.dump(json_hotkeys_default, hotkeys, indent=4)
-            
-    else:
-        try:
-            with open('hotkeys.json', 'r') as hotkeys:
-                json_hotkeys = json.load(hotkeys)
 
-                hotkey_config.start_key = parse_combination_to_keys(json_hotkeys,'start/stop_timer', display)
-                hotkey_config.pause_key = parse_combination_to_keys(json_hotkeys,'pause/unpause_timer', display)
-                hotkey_config.reset_key = parse_combination_to_keys(json_hotkeys,'reset_timer', display)
-                hotkey_config.split_key = parse_combination_to_keys(json_hotkeys,'split', display)
-                hotkey_config.quit_key = parse_combination_to_keys(json_hotkeys,'quit', display)
-                hotkey_config.load_split_key = parse_combination_to_keys(json_hotkeys,'load_split', display)
-        except:
-            print('Error while parsing the hotkey values, check if thers an incorrect key name or delete hotkeys.json to create a default config')    
+    try:
+        with open('hotkeys.json', 'r') as hotkeys:
+            json_hotkeys = json.load(hotkeys)
+
+            hotkey_config.start_key = parse_combination_to_keys(json_hotkeys, 'start/stop_timer', display)
+            hotkey_config.pause_key = parse_combination_to_keys(json_hotkeys, 'pause/unpause_timer', display)
+            hotkey_config.reset_key = parse_combination_to_keys(json_hotkeys, 'reset_timer', display)
+            hotkey_config.split_key = parse_combination_to_keys(json_hotkeys, 'split', display)
+            hotkey_config.quit_key = parse_combination_to_keys(json_hotkeys, 'quit', display)
+            hotkey_config.load_split_key = parse_combination_to_keys(json_hotkeys, 'load_split', display)
+    except Exception as e:
+        print('Error while parsing the hotkey values, check if thers an incorrect key name or delete hotkeys.json to create a default config')
 
     config_queue.put(hotkey_config) 
 

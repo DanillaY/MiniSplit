@@ -250,14 +250,14 @@ class Timer:
                 break
             
             if self._pause_event.is_set():
-                time.sleep(0.004)
+                time.sleep(0.002)
                 continue
 
             self.end = time.time()
             text_formated = self.format_time_without_diff()
 
             self.split_manager.label_main_timer.config(text=text_formated)
-            time.sleep(0.004)
+            time.sleep(0.002)
 
     def start_timer(self):
         if self.running == False:

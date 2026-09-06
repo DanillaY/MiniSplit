@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <sched.h>
@@ -15,7 +16,7 @@ inline bool read_process_memory_linux(pid_t pid, uintptr_t address, void* buffer
 
     local_iov.iov_base = buffer;
     local_iov.iov_len  = size;
-
+    
     remote_iov.iov_base = reinterpret_cast<void*>(address);
     remote_iov.iov_len  = size;
 
@@ -39,7 +40,7 @@ inline uintptr_t add_offset64_linux(pid_t pid, uintptr_t base, uintptr_t offset)
     return new_pointer;
 }
 
-inline uintptr_t add_all_offsets_linux(pid_t pid,uintptr_t base_module,const std::vector<uintptr_t>& offsets,  bool process64)
+inline uintptr_t add_all_offsets_linux(pid_t pid,uintptr_t base_module,const std::vector<uintptr_t>& offsets, bool process64)
 {
     uintptr_t addr = process64
         ? add_offset64_linux(pid, base_module, offsets[0])
@@ -100,7 +101,7 @@ inline int read_proc_memory_deref_first(pid_t pid,uintptr_t base_module, const s
 
 //directly dereferencing the address, no offsets
 template <typename T>
-T read_direct_deref(pid_t pid, uintptr_t address) {
+inline T read_direct_deref(pid_t pid, uintptr_t address) {
     T value{};
     read_process_memory_linux(pid, address, &value, sizeof(T));
     return value;

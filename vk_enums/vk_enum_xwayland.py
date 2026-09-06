@@ -118,6 +118,40 @@ class vk_codes_xwayland(Enum):
     SHIFT_R = keyboard.Key.shift_r
     CTRL_L = keyboard.Key.ctrl_l
     CTRL_R = keyboard.Key.ctrl_r
+
+SHIFT_ANY = "SHIFT_ANY"
+
+UPPER_TO_BASE = {
+    vk_codes_xwayland.UPPER_Q.value: vk_codes_xwayland.Q.value,
+    vk_codes_xwayland.UPPER_W.value: vk_codes_xwayland.W.value,
+    vk_codes_xwayland.UPPER_E.value: vk_codes_xwayland.E.value,
+    vk_codes_xwayland.UPPER_R.value: vk_codes_xwayland.R.value,
+    vk_codes_xwayland.UPPER_T.value: vk_codes_xwayland.T.value,
+    vk_codes_xwayland.UPPER_Y.value: vk_codes_xwayland.Y.value,
+    vk_codes_xwayland.UPPER_U.value: vk_codes_xwayland.U.value,
+    vk_codes_xwayland.UPPER_I.value: vk_codes_xwayland.I.value,
+    vk_codes_xwayland.UPPER_O.value: vk_codes_xwayland.O.value,
+    vk_codes_xwayland.UPPER_P.value: vk_codes_xwayland.P.value,
+    vk_codes_xwayland.UPPER_A.value: vk_codes_xwayland.A.value,
+    vk_codes_xwayland.UPPER_S.value: vk_codes_xwayland.S.value,
+    vk_codes_xwayland.UPPER_D.value: vk_codes_xwayland.D.value,
+    vk_codes_xwayland.UPPER_F.value: vk_codes_xwayland.F.value,
+    vk_codes_xwayland.UPPER_G.value: vk_codes_xwayland.G.value,
+    vk_codes_xwayland.UPPER_H.value: vk_codes_xwayland.H.value,
+    vk_codes_xwayland.UPPER_J.value: vk_codes_xwayland.J.value,
+    vk_codes_xwayland.UPPER_K.value: vk_codes_xwayland.K.value,
+    vk_codes_xwayland.UPPER_L.value: vk_codes_xwayland.L.value,
+    vk_codes_xwayland.UPPER_Z.value: vk_codes_xwayland.Z.value,
+    vk_codes_xwayland.UPPER_X.value: vk_codes_xwayland.X.value,
+    vk_codes_xwayland.UPPER_C.value: vk_codes_xwayland.C.value,
+    vk_codes_xwayland.UPPER_V.value: vk_codes_xwayland.V.value,
+    vk_codes_xwayland.UPPER_B.value: vk_codes_xwayland.B.value,
+    vk_codes_xwayland.UPPER_N.value: vk_codes_xwayland.N.value,
+    vk_codes_xwayland.UPPER_M.value: vk_codes_xwayland.M.value,
+}
+
+SHIFT_L_VK = vk_codes_xwayland.SHIFT_L.value.value.vk
+SHIFT_R_VK = vk_codes_xwayland.SHIFT_R.value.value.vk
     
 def is_special_key(key: int | keyboard.Key):
     if isinstance(key.value, int):
@@ -125,3 +159,8 @@ def is_special_key(key: int | keyboard.Key):
     
     elif isinstance(key.value, keyboard.Key):
         return True
+
+def normalize(vk):
+    if vk in (SHIFT_L_VK, SHIFT_R_VK):
+        return SHIFT_ANY
+    return UPPER_TO_BASE.get(vk, vk)
