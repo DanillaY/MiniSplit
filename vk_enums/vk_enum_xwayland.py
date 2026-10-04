@@ -1,9 +1,10 @@
 from enum import Enum
+
 from pynput import keyboard
 
-class vk_codes_xwayland(Enum):
 
-    NUMPAD_NUM_0 = 65379 
+class vk_codes_xwayland(Enum):
+    NUMPAD_NUM_0 = 65379
     NUMPAD_NUM_1 = 65367
     NUMPAD_NUM_2 = 65364
     NUMPAD_NUM_3 = 65366
@@ -20,7 +21,7 @@ class vk_codes_xwayland(Enum):
     # NUMPAD_NUM_PLUS = not supported
     # NUMPAD_NUM_DOT = not supported
 
-    NUM_0 = 48 
+    NUM_0 = 48
     NUM_1 = 49
     NUM_2 = 50
     NUM_3 = 51
@@ -70,7 +71,7 @@ class vk_codes_xwayland(Enum):
     N = 110
     M = 109
 
-    #use these buttons with combination of shift (because pynput interprets uppercase letters as different keycodes)
+    # use these buttons with combination of shift (because pynput interprets uppercase letters as different keycodes)
     UPPER_Q = 1770
     UPPER_W = 1763
     UPPER_E = 1781
@@ -98,7 +99,7 @@ class vk_codes_xwayland(Enum):
     UPPER_N = 1780
     UPPER_M = 1784
 
-    #special keys section
+    # special keys section
     F1 = keyboard.Key.f1
     F2 = keyboard.Key.f2
     F3 = keyboard.Key.f3
@@ -118,6 +119,7 @@ class vk_codes_xwayland(Enum):
     SHIFT_R = keyboard.Key.shift_r
     CTRL_L = keyboard.Key.ctrl_l
     CTRL_R = keyboard.Key.ctrl_r
+
 
 SHIFT_ANY = "SHIFT_ANY"
 
@@ -152,13 +154,15 @@ UPPER_TO_BASE = {
 
 SHIFT_L_VK = vk_codes_xwayland.SHIFT_L.value.value.vk
 SHIFT_R_VK = vk_codes_xwayland.SHIFT_R.value.value.vk
-    
+
+
 def is_special_key(key: int | keyboard.Key):
     if isinstance(key.value, int):
         return False
-    
+
     elif isinstance(key.value, keyboard.Key):
         return True
+
 
 def normalize(vk):
     if vk in (SHIFT_L_VK, SHIFT_R_VK):
