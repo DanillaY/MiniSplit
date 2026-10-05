@@ -1,7 +1,6 @@
 #include <iostream>
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
-#include <csignal>
 #include <ostream>
 #include <sys/types.h>
 #include <inttypes.h>
@@ -34,17 +33,9 @@
 
     after the compilation run .\autosplit game_name.exe localhost
 */
-Basic_Process_Info* Basic_Process_Info::bpi = nullptr;
-
-void handle_sigint(int signal) {
-    //clean_up_alloc_memory
-    exit(0);
-}
 
 int main(int argc, char* argv[])
 {
-	signal(SIGINT, handle_sigint);
-
     if(argc < 3) {
         std::cout << "Not enough arguments were passed.\nProgram requires a process name argument and the ip of the socket server" << std::endl;
         return 1;

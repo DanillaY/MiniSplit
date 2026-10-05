@@ -11,7 +11,7 @@ class Basic_Process_Info {
         int pid;
         bool is_64bit;
 
-        static Basic_Process_Info* bpi;
+        inline static Basic_Process_Info* bpi = nullptr;
 
         Basic_Process_Info (char* process_name, uintptr_t base_module_address, int pid, bool is_64bit) {
             this->process_name = process_name;
